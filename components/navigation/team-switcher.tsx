@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronsUpDown, Settings, Settings2, UserPlus } from "lucide-react";
+import { ChevronsUpDown, Settings, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -16,10 +16,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useCurrentPlan } from "@/components/providers/subscription-provider";
 
 export function TeamSwitcher({ organization }: { organization: any }) {
   const router = useRouter();
   const { isMobile } = useSidebar();
+  const currentPlan = useCurrentPlan();
 
   if (!organization) return null;
 
@@ -48,7 +50,7 @@ export function TeamSwitcher({ organization }: { organization: any }) {
                   {organization.name}
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {organization.plan || "Free Plan"}
+                  {currentPlan.name}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4 opacity-70" />
@@ -79,7 +81,7 @@ export function TeamSwitcher({ organization }: { organization: any }) {
                     {organization.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {organization.plan || "Free Plan"}
+                    {currentPlan.name}
                   </span>
                 </div>
               </div>
@@ -87,7 +89,6 @@ export function TeamSwitcher({ organization }: { organization: any }) {
 
             <DropdownMenuSeparator />
 
-            {/* Links */}
             <DropdownMenuItem
               className="gap-2 p-2 cursor-pointer"
               onClick={() => router.push("/settings/workspace")}

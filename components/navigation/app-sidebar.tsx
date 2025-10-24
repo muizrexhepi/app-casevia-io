@@ -19,7 +19,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: activeOrg, isPending: isOrgLoading } =
     authClient.useListOrganizations();
 
-  console.log({ activeOrg });
   if (isUserLoading || isOrgLoading) return null;
   if (!session?.user) return null;
 

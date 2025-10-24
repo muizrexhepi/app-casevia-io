@@ -14,6 +14,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: session, isPending } = authClient.useSession();
 
+  console.log({ activeOrg: session?.session.activeOrganizationId });
   useEffect(() => {
     if (!isPending && !session) {
       const callbackUrl = encodeURIComponent(pathname);

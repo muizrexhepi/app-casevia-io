@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   BadgeCheck,
   Bell,
@@ -11,6 +10,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
+import { useSubscription } from "@/components/providers/subscription-provider";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -36,6 +36,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
+  const { currentPlan } = useSubscription();
 
   const handleSignOut = async () => {
     await authClient.signOut();
@@ -52,6 +53,9 @@ export function NavUser({
       .join("")
       .toUpperCase()
       .slice(0, 2);
+
+  // Show upgrade option only if not on Agency plan
+  const showUpgrade = currentPlan !== "agency";
 
   return (
     <SidebarMenu>
@@ -98,14 +102,20 @@ export function NavUser({
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => router.push("/billing")}>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
+            {showUpgrade && (
+              <>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/settings/billing")}
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Upgrade Plan
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
 
-            <DropdownMenuSeparator />
+                <DropdownMenuSeparator />
+              </>
+            )}
 
             <DropdownMenuGroup>
               <DropdownMenuItem
@@ -114,7 +124,9 @@ export function NavUser({
                 <BadgeCheck className="mr-2 h-4 w-4" />
                 Account
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/billing")}>
+              <DropdownMenuItem
+                onClick={() => router.push("/settings/billing")}
+              >
                 <CreditCard className="mr-2 h-4 w-4" />
                 Billing
               </DropdownMenuItem>

@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/navigation/app-sidebar";
 import { NavHeader } from "@/components/navigation/nav-header";
+import { OrganizationAutoSelector } from "@/components/org-selector";
 import { AuthGuard } from "@/components/providers/auth-provider";
 import { SettingsSidebar } from "@/components/settings/settings-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -22,12 +23,12 @@ export default async function SettingsLayout({
 
   return (
     <AuthGuard>
+      <OrganizationAutoSelector />
       <SidebarProvider>
-        <AppSidebar />
+        <SettingsSidebar />
         <SidebarInset>
           <NavHeader />
           <div className="flex h-full">
-            <SettingsSidebar />
             <main className="flex-1 overflow-y-auto p-6">{children}</main>
           </div>
         </SidebarInset>

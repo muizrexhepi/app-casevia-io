@@ -23,7 +23,7 @@ export function NavHeader() {
       <Separator
         orientation="vertical"
         className="mr-2 data-[orientation=vertical]:h-4"
-      />{" "}
+      />
       <Breadcrumb>
         <BreadcrumbList>
           {segments.map((segment, idx) => (
