@@ -1,25 +1,29 @@
-// app/dashboard/projects/projects-list.tsx
+// app/dashboard/casestudies/casestudies-list.tsx
 "use client";
 
 import Link from "next/link";
 import {
   Plus,
-  FileText,
+  BookText, // Changed icon
   Clock,
   CheckCircle2,
   AlertCircle,
   Calendar,
-  Film,
-  FileAudio,
+  Eye, // Icon for views
+  Building, // Icon for industry
+  Pencil, // Icon for draft
 } from "lucide-react";
 import { useCurrentPlan } from "../providers/subscription-provider";
 
-interface ProjectsListProps {
-  projects: any[];
+interface CaseStudiesListProps {
+  caseStudies: any[]; // Using 'any' to match the provided project type
   initialLimits: any;
 }
 
-export function ProjectsList({ projects, initialLimits }: ProjectsListProps) {
+export function CaseStudiesList({
+  caseStudies,
+  initialLimits,
+}: CaseStudiesListProps) {
   const currentPlan = useCurrentPlan();
   const usagePercentage = initialLimits
     ? (initialLimits.caseStudiesUsed / currentPlan.limits.caseStudies) * 100
@@ -27,7 +31,7 @@ export function ProjectsList({ projects, initialLimits }: ProjectsListProps) {
 
   return (
     <>
-      {/* Usage Stats */}
+      {/* Usage Stats (This card is identical to the one on the projects page) */}
       <div className="bg-card rounded-lg border border-border shadow-sm p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -91,18 +95,19 @@ export function ProjectsList({ projects, initialLimits }: ProjectsListProps) {
         </div>
       </div>
 
-      {/* Projects List */}
-      {projects.length === 0 ? (
+      {/* Case Studies List */}
+      {caseStudies.length === 0 ? (
         <div className="bg-card rounded-lg shadow-sm border border-border p-12 text-center">
-          <FileText className="w-16 h-16 mx-auto mb-4 text-foreground" />
+          <BookText className="w-16 h-16 mx-auto mb-4 text-foreground" />
           <h3 className="text-lg font-semibold text-foreground mb-2">
-            No projects yet
+            No case studies yet
           </h3>
           <p className="text-muted-foreground mb-6">
-            Create your first project to start generating case studies
+            Your generated case studies will appear here. Start by creating a
+            new project.
           </p>
           <Link
-            href="/dashboard/projects/new"
+            href="/dashboard/projects/new" // Link to create a project, not a case study
             className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
           >
             <Plus className="w-5 h-5" />
@@ -111,8 +116,8 @@ export function ProjectsList({ projects, initialLimits }: ProjectsListProps) {
         </div>
       ) : (
         <div className="grid gap-4">
-          {projects.map((proj) => (
-            <ProjectCard key={proj.id} project={proj} />
+          {caseStudies.map((cs) => (
+            <CaseStudyCard key={cs.id} caseStudy={cs} />
           ))}
         </div>
       )}
@@ -120,47 +125,22 @@ export function ProjectsList({ projects, initialLimits }: ProjectsListProps) {
   );
 }
 
-function ProjectCard({ project }: { project: any }) {
+function CaseStudyCard({ caseStudy }: { caseStudy: any }) {
   const getStatusBadge = () => {
-    switch (project.status) {
-      case "uploading":
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
-            <Clock className="w-3 h-3" />
-            Uploading
-          </span>
-        );
-      case "transcribing":
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
-            <Clock className="w-3 h-3 animate-pulse" />
-            Transcribing
-          </span>
-        );
-      case "analyzing":
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded">
-            <Clock className="w-3 h-3 animate-pulse" />
-            Analyzing
-          </span>
-        );
-      case "ready":
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
-            <CheckCircle2 className="w-3 h-3" />
-            Ready
-          </span>
-        );
-      case "failed":
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">
-            <AlertCircle className="w-3 h-3" />
-            Failed
-          </span>
-        );
-      default:
-        return null;
+    if (caseStudy.published) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
+          <CheckCircle2 className="w-3 h-3" />
+          Published
+        </span>
+      );
     }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded">
+        <Pencil className="w-3 h-3" />
+        Draft
+      </span>
+    );
   };
 
   const formatDate = (date: Date) => {
@@ -171,33 +151,23 @@ function ProjectCard({ project }: { project: any }) {
     });
   };
 
-  const formatDuration = (seconds: number | null) => {
-    if (!seconds) return "N/A";
-    const mins = Math.floor(seconds / 60);
-    return `${mins} min`;
-  };
-
   return (
     <Link
-      href={`/dashboard/projects/${project.id}`}
+      href={`/dashboard/case-studies/${caseStudy.id}`} // Link to the specific case study editor
       className="block bg-card rounded-lg border border-border p-6 hover:shadow-md transition-shadow"
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 flex items-start gap-3">
-          {project.fileName && (
-            <div className="shrink-0">
-              {project.fileName.match(/\.(mp4|mov|avi)$/i) ? (
-                <Film className="w-5 h-5 text-muted-foreground" />
-              ) : (
-                <FileAudio className="w-5 h-5 text-muted-foreground" />
-              )}
-            </div>
-          )}
+          <div className="shrink-0">
+            <BookText className="w-5 h-5 text-muted-foreground" />
+          </div>
           <div>
             <h3 className="text-lg font-semibold text-foreground mb-1">
-              {project.title}
+              {caseStudy.title}
             </h3>
-            <p className="text-sm text-muted-foreground">{project.fileName}</p>
+            <p className="text-sm text-muted-foreground">
+              {caseStudy.clientName}
+            </p>
           </div>
         </div>
         {getStatusBadge()}
@@ -206,24 +176,19 @@ function ProjectCard({ project }: { project: any }) {
       <div className="flex items-center gap-6 text-sm text-muted-foreground">
         <div className="flex items-center gap-1">
           <Calendar className="w-4 h-4" />
-          {formatDate(project.createdAt)}
+          {formatDate(caseStudy.createdAt)}
         </div>
-        {project.durationSeconds && (
+        <div className="flex items-center gap-1">
+          <Eye className="w-4 h-4" />
+          {caseStudy.viewCount} views
+        </div>
+        {caseStudy.clientIndustry && (
           <div className="flex items-center gap-1">
-            <Clock className="w-4 h-4" />
-            {formatDuration(project.durationSeconds)}
+            <Building className="w-4 h-4" />
+            {caseStudy.clientIndustry}
           </div>
         )}
-        {project.fileSize && (
-          <div>{(project.fileSize / (1024 * 1024)).toFixed(1)} MB</div>
-        )}
       </div>
-
-      {project.errorMessage && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800">
-          {project.errorMessage}
-        </div>
-      )}
     </Link>
   );
 }

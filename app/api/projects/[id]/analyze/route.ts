@@ -8,6 +8,7 @@ import OpenAI from "openai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
+  baseURL: "https://api.deepseek.com",
 });
 
 export async function POST(
@@ -42,7 +43,8 @@ export async function POST(
 
     // 3. Call GPT-4o with the magic prompt
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      // model: "gpt-4o",
+      model: "deepseek-chat",
       messages: [
         {
           role: "system",

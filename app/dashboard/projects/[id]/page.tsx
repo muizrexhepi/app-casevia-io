@@ -10,29 +10,40 @@ import { ProjectStatusView } from "@/components/projects/project-status-view";
 export default async function ProjectDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  // ✅ Await params because it's now a Promise in Next.js 15+
+  const { id } = await params;
+
+  // ✅ Get session
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
+  // ✅ Protect the route
   if (!session?.user || !session.session.activeOrganizationId) {
     redirect("/sign-in");
   }
 
   const organizationId = session.session.activeOrganizationId;
 
-  // Fetch project
+  // ✅ Fetch the project
   const [projectData] = await db
     .select()
     .from(project)
     .where(
-      and(eq(project.id, params.id), eq(project.organizationId, organizationId))
+      and(
+        // if your project.id is a number, use Number(id)
+        eq(project.id, id),
+        eq(project.organizationId, organizationId)
+      )
     );
 
+  // ✅ Redirect if not found
   if (!projectData) {
     redirect("/dashboard/projects");
   }
 
+  // ✅ Render the project view
   return <ProjectStatusView project={projectData} />;
 }
