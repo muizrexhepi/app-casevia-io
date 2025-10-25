@@ -67,7 +67,15 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   };
 
   const currentPlan = getCurrentPlan();
-
+  // useEffect(() => {
+  //   if (activeOrg?.id && currentPlan) {
+  //     fetch("/api/subscription/sync", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ planId: currentPlan }),
+  //     }).catch((err) => console.error("Failed to sync plan:", err));
+  //   }
+  // }, [activeOrg?.id, currentPlan]);
   return (
     <SubscriptionContext.Provider
       value={{

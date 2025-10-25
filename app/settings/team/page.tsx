@@ -20,6 +20,37 @@ import {
 } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 
+// Shadcn/ui component imports
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+
 type Role = "owner" | "admin" | "member";
 
 interface FullOrg {
@@ -37,7 +68,7 @@ export default function TeamMembersPage() {
   const [inviteRole, setInviteRole] = useState<Role>("member");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState<Role | "all">("all");
-  const [showRoleMenu, setShowRoleMenu] = useState<string | null>(null);
+  // const [showRoleMenu, setShowRoleMenu] = useState<string | null>(null); // No longer needed, DropdownMenu handles its own state
   const [inviting, setInviting] = useState(false);
   const [fullOrg, setFullOrg] = useState<FullOrg | null>(null);
   const [loading, setLoading] = useState(true);
@@ -144,7 +175,7 @@ export default function TeamMembersPage() {
         memberId,
         organizationId: activeOrg?.id,
       });
-      setShowRoleMenu(null);
+      // setShowRoleMenu(null); // No longer needed
 
       // Refresh org data
       if (activeOrg?.id) {
@@ -189,6 +220,7 @@ export default function TeamMembersPage() {
     }
   };
 
+  // This function now returns only the color/style classes
   const getRoleBadgeClass = (role: Role) => {
     switch (role) {
       case "owner":
@@ -227,399 +259,392 @@ export default function TeamMembersPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pb-12">
-      {/* Header */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">
-              Team Members
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Manage your organization's team members and invitations
-            </p>
-          </div>
-          <button
-            onClick={() => setShowInviteModal(true)}
-            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all font-medium shadow-sm flex items-center gap-2"
-          >
-            <UserPlus className="w-4 h-4" />
-            Invite Member
-          </button>
-        </div>
-      </div>
-
-      {/* Search and Filter Bar */}
-      <div className="bg-card rounded-lg shadow-sm border border-border p-4">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search members..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-background border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-muted-foreground" />
-            <select
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value as Role | "all")}
-              className="px-4 py-2 bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="all">All Roles</option>
-              <option value="owner">Owner</option>
-              <option value="admin">Admin</option>
-              <option value="member">Member</option>
-            </select>
+    <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
+      <div className="max-w-6xl mx-auto space-y-6 pb-12">
+        {/* Header */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Team Members
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Manage your organization's team members and invitations
+              </p>
+            </div>
+            <DialogTrigger asChild>
+              <Button className="px-6 py-2.5 shadow-sm flex items-center gap-2">
+                <UserPlus className="w-4 h-4" />
+                Invite Member
+              </Button>
+            </DialogTrigger>
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Members List */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-card rounded-lg shadow-sm border border-border">
-            <div className="p-6 border-b border-border">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
+        {/* Search and Filter Bar */}
+        <div className="bg-card rounded-lg shadow-sm border border-border p-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search members..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Select
+                value={filterRole}
+                onValueChange={(value) => setFilterRole(value as Role | "all")}
+              >
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="All Roles" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="owner">Owner</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="member">Member</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Members List */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between p-6 border-b">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
                   <Users className="w-5 h-5 text-primary" />
                   Active Members
-                </h2>
-                <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                </CardTitle>
+                <Badge
+                  variant="secondary"
+                  className="bg-primary/10 text-primary"
+                >
                   {filteredMembers.length}
-                </span>
-              </div>
-            </div>
-
-            <div className="divide-y divide-border">
-              {filteredMembers.length === 0 ? (
-                <div className="p-12 text-center">
-                  <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-                  <p className="text-muted-foreground">No members found</p>
-                </div>
-              ) : (
-                filteredMembers.map((member: any) => (
-                  <div
-                    key={member.id}
-                    className="p-6 hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-semibold flex-shrink-0">
-                          {member.user?.image ? (
-                            <img
-                              src={member.user.image}
-                              alt={member.user.name}
-                              className="w-12 h-12 rounded-full object-cover"
-                            />
-                          ) : (
-                            getInitials(
-                              member.user?.name || member.user?.email || ""
-                            )
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-foreground truncate">
-                            {member.user?.name || "Unknown"}
-                          </h3>
-                          <p className="text-sm text-muted-foreground truncate">
-                            {member.user?.email}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Clock className="w-3 h-3 text-muted-foreground" />
-                            <p className="text-xs text-muted-foreground">
-                              Joined{" "}
-                              {new Date(member.createdAt).toLocaleDateString()}
-                            </p>
+                </Badge>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-border">
+                  {filteredMembers.length === 0 ? (
+                    <div className="p-12 text-center">
+                      <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                      <p className="text-muted-foreground">No members found</p>
+                    </div>
+                  ) : (
+                    filteredMembers.map((member: any) => (
+                      <div
+                        key={member.id}
+                        className="p-6 hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <Avatar className="w-12 h-12 flex-shrink-0">
+                              <AvatarImage
+                                src={member.user?.image}
+                                alt={member.user.name}
+                              />
+                              <AvatarFallback className="font-semibold">
+                                {getInitials(
+                                  member.user?.name || member.user?.email || ""
+                                )}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-foreground truncate">
+                                {member.user?.name || "Unknown"}
+                              </h3>
+                              <p className="text-sm text-muted-foreground truncate">
+                                {member.user?.email}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Clock className="w-3 h-3 text-muted-foreground" />
+                                <p className="text-xs text-muted-foreground">
+                                  Joined{" "}
+                                  {new Date(
+                                    member.createdAt
+                                  ).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <div
-                          className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getRoleBadgeClass(
-                            member.role
-                          )}`}
-                        >
-                          {getRoleIcon(member.role)}
-                          <span className="text-sm font-medium capitalize">
-                            {member.role}
-                          </span>
-                        </div>
-
-                        {member.role !== "owner" && (
-                          <div className="relative">
-                            <button
-                              onClick={() =>
-                                setShowRoleMenu(
-                                  showRoleMenu === member.id ? null : member.id
-                                )
-                              }
-                              className="p-2 hover:bg-accent rounded-lg transition-colors"
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            {/* This is a custom "pill", not a standard Badge, so we keep the div */}
+                            <div
+                              className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${getRoleBadgeClass(
+                                member.role
+                              )}`}
                             >
-                              <MoreVertical className="w-5 h-5 text-muted-foreground" />
-                            </button>
+                              {getRoleIcon(member.role)}
+                              <span className="text-sm font-medium capitalize">
+                                {member.role}
+                              </span>
+                            </div>
 
-                            {showRoleMenu === member.id && (
-                              <>
-                                <div
-                                  className="fixed inset-0 z-10"
-                                  onClick={() => setShowRoleMenu(null)}
-                                />
-                                <div className="absolute right-0 mt-2 w-48 bg-card rounded-lg shadow-lg border border-border py-1 z-20">
-                                  <button
+                            {member.role !== "owner" && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="p-2"
+                                  >
+                                    <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
                                     onClick={() =>
                                       handleUpdateRole(member.id, "admin")
                                     }
                                     disabled={member.role === "admin"}
-                                    className="w-full px-4 py-2 text-left text-sm hover:bg-accent flex items-center gap-2 text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="gap-2 cursor-pointer"
                                   >
                                     <Shield className="w-4 h-4" />
                                     Make Admin
-                                  </button>
-                                  <button
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
                                     onClick={() =>
                                       handleUpdateRole(member.id, "member")
                                     }
                                     disabled={member.role === "member"}
-                                    className="w-full px-4 py-2 text-left text-sm hover:bg-accent flex items-center gap-2 text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="gap-2 cursor-pointer"
                                   >
                                     <User className="w-4 h-4" />
                                     Make Member
-                                  </button>
-                                  <hr className="my-1 border-border" />
-                                  <button
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
                                     onClick={() =>
                                       handleRemoveMember(member.id)
                                     }
-                                    className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
+                                    className="text-destructive hover:!text-destructive focus:!text-destructive hover:!bg-destructive/10 focus:!bg-destructive/10 gap-2 cursor-pointer"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                     Remove Member
-                                  </button>
-                                </div>
-                              </>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             )}
                           </div>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Pending Invitations */}
-          <div className="bg-card rounded-lg shadow-sm border border-border">
-            <div className="p-6 border-b border-border">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Pending Invitations */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between p-6 border-b">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
                   <Mail className="w-5 h-5 text-primary" />
                   Pending
-                </h2>
-                <span className="px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-500 rounded-full text-sm font-medium">
+                </CardTitle>
+                <Badge
+                  variant="secondary"
+                  className="bg-amber-500/10 text-amber-600 dark:text-amber-500"
+                >
                   {pendingInvitations.length}
-                </span>
-              </div>
-            </div>
-
-            <div className="divide-y divide-border max-h-96 overflow-y-auto">
-              {pendingInvitations.length === 0 ? (
-                <div className="p-8 text-center">
-                  <Mail className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-                  <p className="text-sm text-muted-foreground">
-                    No pending invitations
-                  </p>
-                </div>
-              ) : (
-                pendingInvitations.map((invitation: any) => (
-                  <div key={invitation.id} className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground text-sm truncate">
-                          {invitation.email}
-                        </p>
-                        <div
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs mt-1 ${getRoleBadgeClass(
-                            invitation.role as Role
-                          )}`}
-                        >
-                          {getRoleIcon(invitation.role as Role)}
-                          {invitation.role}
+                </Badge>
+              </CardHeader>
+              <CardContent className="p-0 max-h-96 overflow-y-auto">
+                <div className="divide-y divide-border">
+                  {pendingInvitations.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <Mail className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+                      <p className="text-sm text-muted-foreground">
+                        No pending invitations
+                      </p>
+                    </div>
+                  ) : (
+                    pendingInvitations.map((invitation: any) => (
+                      <div key={invitation.id} className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-foreground text-sm truncate">
+                              {invitation.email}
+                            </p>
+                            <Badge
+                              className={`text-xs mt-1 capitalize ${getRoleBadgeClass(
+                                invitation.role as Role
+                              )}`}
+                            >
+                              {getRoleIcon(invitation.role as Role)}
+                              <span className="ml-1">{invitation.role}</span>
+                            </Badge>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-6 h-6 hover:bg-destructive/10 group flex-shrink-0"
+                            onClick={() =>
+                              handleCancelInvitation(invitation.id)
+                            }
+                            title="Cancel invitation"
+                          >
+                            <X className="w-4 h-4 text-muted-foreground group-hover:text-destructive" />
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          Expires{" "}
+                          {new Date(invitation.expiresAt).toLocaleDateString()}
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleCancelInvitation(invitation.id)}
-                        className="p-1 hover:bg-destructive/10 rounded transition-colors flex-shrink-0"
-                        title="Cancel invitation"
-                      >
-                        <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="w-3 h-3" />
-                      Expires{" "}
-                      {new Date(invitation.expiresAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-lg p-6 border border-primary/20">
-            <h3 className="font-semibold text-foreground mb-4">
-              Team Overview
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Total Members
-                </span>
-                <span className="font-semibold text-foreground">
-                  {members.length}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Admins</span>
-                <span className="font-semibold text-foreground">
-                  {members.filter((m: any) => m.role === "admin").length}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Pending Invites
-                </span>
-                <span className="font-semibold text-foreground">
-                  {pendingInvitations.length}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Info Card */}
-          <div className="bg-blue-500/10 dark:bg-blue-500/5 rounded-lg p-4 border border-blue-500/20">
-            <div className="flex gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">
-                  Team Permissions
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Owners have full control. Admins can manage members and
-                  settings. Members can view and create content.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Invite Modal */}
-      {showInviteModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-xl shadow-2xl max-w-md w-full border border-border animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-card-foreground">
-                  Invite Team Member
-                </h2>
-                <button
-                  onClick={() => setShowInviteModal(false)}
-                  className="p-2 hover:bg-accent rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-muted-foreground" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="colleague@example.com"
-                    className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Role
-                  </label>
-                  <div className="space-y-2">
-                    {(["member", "admin"] as Role[]).map((role) => (
-                      <button
-                        key={role}
-                        onClick={() => setInviteRole(role)}
-                        className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-                          inviteRole === role
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-border/80 bg-card"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            {getRoleIcon(role)}
-                            <div>
-                              <p className="font-semibold text-foreground capitalize">
-                                {role}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {role === "admin"
-                                  ? "Can manage members and settings"
-                                  : "Can view and create content"}
-                              </p>
-                            </div>
-                          </div>
-                          {inviteRole === role && (
-                            <Check className="w-5 h-5 text-primary" />
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => setShowInviteModal(false)}
-                  disabled={inviting}
-                  className="flex-1 px-4 py-2.5 bg-secondary text-secondary-foreground border border-input rounded-lg hover:bg-accent transition-colors font-medium disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleInviteMember}
-                  disabled={!inviteEmail || inviting}
-                  className="flex-1 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-sm flex items-center justify-center gap-2"
-                >
-                  {inviting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    "Send Invitation"
+                    ))
                   )}
-                </button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Stats */}
+            <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-lg p-6 border border-primary/20">
+              <h3 className="font-semibold text-foreground mb-4">
+                Team Overview
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Total Members
+                  </span>
+                  <span className="font-semibold text-foreground">
+                    {members.length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Admins</span>
+                  <span className="font-semibold text-foreground">
+                    {members.filter((m: any) => m.role === "admin").length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Pending Invites
+                  </span>
+                  <span className="font-semibold text-foreground">
+                    {pendingInvitations.length}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Info Card */}
+            <div className="bg-blue-500/10 dark:bg-blue-500/5 rounded-lg p-4 border border-blue-500/20">
+              <div className="flex gap-3">
+                <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">
+                    Team Permissions
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Owners have full control. Admins can manage members and
+                    settings. Members can view and create content.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Invite Modal */}
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Invite Team Member</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-4">
+            <div>
+              <Label
+                htmlFor="invite-email"
+                className="block text-sm font-medium mb-2"
+              >
+                Email Address
+              </Label>
+              <Input
+                id="invite-email"
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="colleague@example.com"
+              />
+            </div>
+
+            <div>
+              <Label className="block text-sm font-medium mb-2">Role</Label>
+              <div className="space-y-2">
+                {(["member", "admin"] as Role[]).map((role) => (
+                  <button
+                    key={role}
+                    onClick={() => setInviteRole(role)}
+                    className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
+                      inviteRole === role
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-border/80 bg-card"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {getRoleIcon(role)}
+                        <div>
+                          <p className="font-semibold text-foreground capitalize">
+                            {role}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {role === "admin"
+                              ? "Can manage members and settings"
+                              : "Can view and create content"}
+                          </p>
+                        </div>
+                      </div>
+                      {inviteRole === role && (
+                        <Check className="w-5 h-5 text-primary" />
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between gap-2 pt-4">
+            <DialogClose asChild>
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                disabled={inviting}
+              >
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              onClick={handleInviteMember}
+              disabled={!inviteEmail || inviting}
+              className="w-full sm:w-auto"
+            >
+              {inviting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Sending...
+                </>
+              ) : (
+                "Send Invitation"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </div>
+    </Dialog>
   );
 }
