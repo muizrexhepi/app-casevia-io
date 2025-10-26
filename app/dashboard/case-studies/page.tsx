@@ -1,4 +1,4 @@
-// app/dashboard/casestudies/page.tsx
+// app/dashboard/case-studies/page.tsx
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth/server";

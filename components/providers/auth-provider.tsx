@@ -25,7 +25,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   // Show loading state while checking session
   if (isPending) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <Loader2 className="animate-spin text-primary size-7" />
         </div>

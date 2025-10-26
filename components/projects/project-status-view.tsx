@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Upload as UploadIcon,
 } from "lucide-react";
+import { Button } from "../ui/button";
 
 interface ProjectStatusViewProps {
   project: any;
@@ -158,56 +159,58 @@ export function ProjectStatusView({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => router.push("/dashboard/projects")}
-            className="text-sm text-slate-600 hover:text-slate-900 mb-4 flex items-center gap-2"
+            className="text-sm text-muted-foreground hover:text-foreground mb-4 flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Projects
           </button>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             {project.title}
           </h1>
-          <p className="text-slate-600 text-sm">
+          <p className="text-muted-foreground text-sm">
             Created {formatDate(project.createdAt)}
           </p>
         </div>
 
         {/* Status Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-6">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-8 mb-6">
           <div className="flex items-start gap-6">
-            <div className="flex-shrink-0">{statusInfo.icon}</div>
+            <div className="shrink-0">{statusInfo.icon}</div>
 
             <div className="flex-1">
               <div className="flex items-start justify-between mb-2">
-                <h2 className="text-xl font-semibold text-slate-900">
+                <h2 className="text-xl font-semibold text-foreground">
                   {statusInfo.title}
                 </h2>
                 {isPolling && (
-                  <span className="flex items-center gap-2 text-sm text-slate-500">
+                  <span className="flex items-center gap-2 text-sm text-muted-foreground">
                     <RefreshCw className="w-4 h-4 animate-spin" />
                     Updating...
                   </span>
                 )}
               </div>
-              <p className="text-slate-600 mb-6">{statusInfo.description}</p>
+              <p className="text-muted-foreground mb-6">
+                {statusInfo.description}
+              </p>
 
               {/* Progress Bar */}
               {project.status !== "failed" && (
                 <div className="mb-6">
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-600">Progress</span>
-                    <span className="font-medium text-slate-900">
+                    <span className="text-muted-foreground">Progress</span>
+                    <span className="font-medium text-foreground">
                       {statusInfo.progress}%
                     </span>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                  <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
                     <div
-                      className={`h-3 rounded-full transition-all duration-500 bg-gradient-to-r ${
+                      className={`h-3 rounded-full transition-all duration-500 bg-linear-to-r ${
                         statusInfo.color === "blue"
                           ? "from-blue-500 to-blue-600"
                           : statusInfo.color === "purple"
@@ -257,23 +260,21 @@ export function ProjectStatusView({
               {/* Ready State - Show CTA */}
               {project.status === "ready" && (
                 <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={handleViewCaseStudy}
-                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
-                  >
+                  <Button onClick={handleViewCaseStudy} size={"lg"}>
                     Review Case Study
-                  </button>
+                  </Button>
                   {project.transcript && (
-                    <button
+                    <Button
+                      size={"lg"}
+                      variant={"outline"}
                       onClick={() =>
                         router.push(
                           `/dashboard/projects/${project.id}/transcript`
                         )
                       }
-                      className="px-6 py-3 border border-slate-300 hover:border-slate-400 text-slate-700 font-medium rounded-lg transition-colors"
                     >
                       View Transcript
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
@@ -300,35 +301,35 @@ export function ProjectStatusView({
         </div>
 
         {/* File Details */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <h3 className="font-semibold text-slate-900 mb-4">File Details</h3>
+        <div className="bg-card rounded-xl shadow-sm border p-6 mb-6">
+          <h3 className="font-semibold text-foreground mb-4">File Details</h3>
 
           <div className="grid md:grid-cols-3 gap-6">
             <div>
-              <p className="text-xs text-slate-500 mb-1">File Name</p>
-              <p className="text-sm font-medium text-slate-900 break-all">
+              <p className="text-xs text-muted-freground mb-1">File Name</p>
+              <p className="text-sm font-medium text-foreground break-all">
                 {project.fileName}
               </p>
             </div>
 
             <div>
-              <p className="text-xs text-slate-500 mb-1">Duration</p>
-              <p className="text-sm font-medium text-slate-900">
+              <p className="text-xs text-muted-freground mb-1">Duration</p>
+              <p className="text-sm font-medium text-foreground">
                 {formatDuration(project.durationSeconds)}
               </p>
             </div>
 
             <div>
-              <p className="text-xs text-slate-500 mb-1">File Size</p>
-              <p className="text-sm font-medium text-slate-900">
+              <p className="text-xs text-muted-freground mb-1">File Size</p>
+              <p className="text-sm font-medium text-foreground">
                 {formatFileSize(project.fileSize)}
               </p>
             </div>
           </div>
 
           {project.fileUrl && (
-            <div className="mt-4 pt-4 border-t border-slate-100">
-              <p className="text-xs text-slate-500 mb-2">File Location</p>
+            <div className="mt-4 pt-4 border-t">
+              <p className="text-xs text-muted-freground mb-2">File Location</p>
               <a
                 href={project.fileUrl}
                 target="_blank"
@@ -344,7 +345,7 @@ export function ProjectStatusView({
         {/* Estimated Time */}
         {(project.status === "transcribing" ||
           project.status === "analyzing") && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="p-4 bg-blue-50 border rounded-lg">
             <p className="text-sm text-blue-900">
               <span className="font-semibold">Estimated time remaining:</span>{" "}
               2-5 minutes
@@ -357,12 +358,12 @@ export function ProjectStatusView({
 
         {/* Transcript Preview (if available) */}
         {project.transcript && project.status === "ready" && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-6">
-            <h3 className="font-semibold text-slate-900 mb-4">
+          <div className="bg-card rounded-xl shadow-sm border p-6 mt-6">
+            <h3 className="font-semibold text-foreground mb-4">
               Transcript Preview
             </h3>
-            <div className="bg-slate-50 rounded-lg p-4 max-h-48 overflow-y-auto">
-              <p className="text-sm text-slate-700 whitespace-pre-wrap line-clamp-6">
+            <div className="bg-muted rounded-lg p-4 max-h-48 overflow-y-auto">
+              <p className="text-sm text-accent-foreground whitespace-pre-wrap line-clamp-6">
                 {project.transcript.substring(0, 500)}...
               </p>
             </div>

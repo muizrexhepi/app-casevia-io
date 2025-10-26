@@ -12,15 +12,16 @@ import {
   BookText,
   Check,
   ChevronRight,
+  Mail, // New Icon
+  Globe, // New Icon
 } from "lucide-react";
-import { Button } from "@/components/ui/button"; // Assuming you have this
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Assuming you have this
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // --- Helper Functions ---
 
 /**
  * Safely parses a JSONB field that might be a string or already an object.
- * Returns an array, defaulting to an empty one on failure.
  */
 function safeParseJsonb(jsonb: any, defaultValue: any[] = []): any[] {
   if (!jsonb) {
@@ -51,6 +52,18 @@ function extractMetric(str: string): { value: string; label: string } {
     return { value, label };
   }
   return { value: "", label: str };
+}
+
+/**
+ * NEW: Converts hex to RGB for use in rgba()
+ */
+function hexToRgb(hex: string) {
+  let c: any = hex.substring(1).split("");
+  if (c.length === 3) {
+    c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+  }
+  c = "0x" + c.join("");
+  return [(c >> 16) & 255, (c >> 8) & 255, c & 255];
 }
 
 // --- SEO Metadata ---
@@ -104,13 +117,13 @@ export default async function PublicCaseStudyPage({
     notFound();
   }
 
-  // 2. Fetch Agency/Organization Details for Branding
+  // 2. Fetch Agency/Organization Details
   const [org] = await db
     .select({ name: organization.name, logo: organization.logo })
     .from(organization)
     .where(eq(organization.id, data.organizationId));
 
-  // 3. Increment View Count (makes page dynamic)
+  // 3. Increment View Count
   await db
     .update(caseStudy)
     .set({ viewCount: data.viewCount + 1 })
@@ -121,6 +134,9 @@ export default async function PublicCaseStudyPage({
   const agencyLogo = branding.logo || org?.logo || null;
   const agencyName = org?.name || "Our Agency";
   const primaryColor = branding.primaryColor || "#2563EB"; // Default: blue-600
+  // NEW: Create a light shade for backgrounds
+  const rgb = hexToRgb(primaryColor);
+  const lightPrimaryColor = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.05)`; // 5% opacity
 
   // 5. Safely Parse JSON data
   const keyQuotes = safeParseJsonb(data.keyQuotes);
@@ -128,44 +144,31 @@ export default async function PublicCaseStudyPage({
   const keyTakeaways = safeParseJsonb(data.keyTakeaways);
 
   return (
-    <div className="bg-white text-gray-900">
-      {/* 1. Agency Header */}
-      <PageHeader logo={agencyLogo} name={agencyName} />
+    <div className="bg-white text-gray-900 antialiased">
+      {/* 1. UPGRADED Agency Header (Sticky + Blur) */}
+      <PageHeader logo={agencyLogo} name={agencyName} color={primaryColor} />
 
       <main>
-        {/* 2. Hero Section */}
-        <section className="bg-gray-50 py-16 md:py-24">
-          <div className="max-w-5xl mx-auto px-6 text-center">
-            <p className="font-semibold" style={{ color: primaryColor }}>
-              Case Study: {data.clientName}
-            </p>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 mt-2 mb-6">
-              {data.title}
-            </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {data.summary}
-            </p>
-          </div>
-        </section>
+        {/* 2. UPGRADED Hero Section */}
+        <HeroSection
+          agencyName={agencyName}
+          clientName={data.clientName}
+          title={data.title}
+          summary={data.summary}
+          primaryColor={primaryColor}
+          lightPrimaryColor={lightPrimaryColor}
+        />
 
-        {/* 3. Stats Bar */}
+        {/* 3. UPGRADED Stats Bar */}
         {metrics.length > 0 && (
-          <section className="bg-gray-800 text-white py-12">
-            <div className="max-w-7xl mx-auto px-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {metrics.map((metric: { metric: string }, i: number) => (
-                  <StatCard key={i} metric={metric.metric} />
-                ))}
-              </div>
-            </div>
-          </section>
+          <MetricsBar metrics={metrics} color={primaryColor} />
         )}
 
         {/* 4. Main Content (2-Column Layout) */}
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Left Column: Narrative */}
-            <article className="lg:col-span-2 prose prose-lg max-w-none prose-p:whitespace-pre-wrap prose-headings:font-semibold">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
+            {/* Left Column: Narrative (UPGRADED Section styling) */}
+            <article className="lg:col-span-2 space-y-12">
               <Section
                 title="The Challenge"
                 content={data.challenge}
@@ -183,14 +186,15 @@ export default async function PublicCaseStudyPage({
               />
             </article>
 
-            {/* Right Column: Sticky Sidebar */}
+            {/* Right Column: Sticky Sidebar (UPGRADED with Client Logo) */}
             <aside className="lg:col-span-1">
-              <div className="lg:sticky lg:top-10 space-y-8">
+              <div className="lg:sticky lg:top-28 space-y-8">
                 <StickySidebar
                   clientName={data.clientName}
                   clientIndustry={data.clientIndustry}
+                  clientLogo={(data as any).clientLogo} // Assumes 'clientLogo' field exists
                   takeaways={keyTakeaways}
-                  quote={keyQuotes[0]} // Show the first quote
+                  quote={keyQuotes[0]}
                   color={primaryColor}
                 />
               </div>
@@ -198,35 +202,45 @@ export default async function PublicCaseStudyPage({
           </div>
         </div>
 
-        {/* 5. Call to Action (CTA) */}
-        <CtaSection agencyName={agencyName} color={primaryColor} />
+        {/* 5. UPGRADED Call to Action (CTA) */}
+        <CtaSection
+          agencyName={agencyName}
+          color={primaryColor}
+          lightColor={lightPrimaryColor}
+        />
       </main>
 
-      {/* 6. Agency Footer */}
-      <PageFooter agencyName={agencyName} />
+      {/* 6. UPGRADED Agency Footer */}
+      <PageFooter agencyName={agencyName} logo={agencyLogo} />
     </div>
   );
 }
 
-// --- Sub-Components ---
+// --- Sub-Components (Overhauled) ---
 
-function PageHeader({ logo, name }: { logo: string | null; name: string }) {
+function PageHeader({
+  logo,
+  name,
+  color,
+}: {
+  logo: string | null;
+  name: string;
+  color: string;
+}) {
   return (
-    <header className="bg-white border-b border-gray-200">
+    <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-200">
       <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3 group">
           {logo ? (
             <img src={logo} alt={`${name} Logo`} className="h-8 w-auto" />
           ) : (
             <span className="font-bold text-xl">{name}</span>
           )}
-        </div>
+        </Link>
         <Button
           asChild
-          style={{
-            backgroundColor: (PageHeader as any).primaryColor,
-            color: "white",
-          }}
+          style={{ backgroundColor: color, color: "white" }}
+          className="shadow-md hover:shadow-lg transition-shadow"
         >
           <Link href="#contact">Contact Sales</Link>
         </Button>
@@ -235,19 +249,80 @@ function PageHeader({ logo, name }: { logo: string | null; name: string }) {
   );
 }
 
-function StatCard({ metric }: { metric: string }) {
-  const { value, label } = extractMetric(metric);
+function HeroSection({
+  agencyName,
+  clientName,
+  title,
+  summary,
+  primaryColor,
+  lightPrimaryColor,
+}: {
+  agencyName: string;
+  clientName: string | null;
+  title: string;
+  summary: string | null;
+  primaryColor: string;
+  lightPrimaryColor: string;
+}) {
   return (
-    <div className="bg-gray-700 p-6 rounded-lg text-center">
-      {value ? (
-        <>
-          <span className="text-4xl font-bold text-white">{value}</span>
-          <p className="text-gray-300 mt-2">{label}</p>
-        </>
-      ) : (
-        <p className="text-lg text-gray-200">{label}</p>
-      )}
-    </div>
+    <section
+      className="py-20 md:py-28"
+      style={{
+        backgroundImage: `radial-gradient(circle at 20% 50%, ${lightPrimaryColor} 0%, transparent 40%),
+                         radial-gradient(circle at 80% 90%, ${lightPrimaryColor} 0%, transparent 40%)`,
+      }}
+    >
+      <div className="max-w-5xl mx-auto px-6 text-center">
+        <div className="mb-4">
+          <Link
+            href="/work" // Assumes an agency "work" or "portfolio" page
+            className="text-sm font-medium"
+            style={{ color: primaryColor }}
+          >
+            {agencyName} Case Studies <span className="opacity-50">/</span>{" "}
+            {clientName}
+          </Link>
+        </div>
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 mt-2 mb-6">
+          {title}
+        </h1>
+        <p className="text-xl text-gray-600 max-w-3xl mx-auto">{summary}</p>
+      </div>
+    </section>
+  );
+}
+
+function MetricsBar({
+  metrics,
+  color,
+}: {
+  metrics: { metric: string }[];
+  color: string;
+}) {
+  return (
+    <section className="bg-gray-900 text-white py-12 md:py-16">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {metrics.map((metric: { metric: string }, i: number) => {
+            const { value, label } = extractMetric(metric.metric);
+            return (
+              <div key={i} className="text-center">
+                {value ? (
+                  <>
+                    <span className="text-5xl font-bold" style={{ color }}>
+                      {value}
+                    </span>
+                    <p className="text-gray-300 mt-2 text-lg">{label}</p>
+                  </>
+                ) : (
+                  <p className="text-lg text-gray-200">{label}</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -262,14 +337,19 @@ function Section({
 }) {
   if (!content) return null;
   return (
-    <section className="mb-12">
-      <h2
-        className="text-3xl font-semibold mb-4 pb-2"
-        style={{ borderBottom: `3px solid ${color}` }}
-      >
-        {title}
-      </h2>
-      <p className="text-gray-700">{content}</p>
+    <section>
+      <div className="mb-4">
+        <span
+          className="text-sm font-semibold uppercase tracking-wider"
+          style={{ color }}
+        >
+          {title}
+        </span>
+      </div>
+      {/* Use prose for nice defaults, but override p color for better contrast */}
+      <div className="prose prose-lg max-w-none prose-p:text-gray-700 prose-p:whitespace-pre-wrap">
+        <p>{content}</p>
+      </div>
     </section>
   );
 }
@@ -277,26 +357,36 @@ function Section({
 function StickySidebar({
   clientName,
   clientIndustry,
+  clientLogo,
   takeaways,
   quote,
   color,
 }: {
   clientName: string | null;
   clientIndustry: string | null;
+  clientLogo?: string | null; // Assumed field
   takeaways: string[];
   quote: string | null;
   color: string;
 }) {
   return (
     <>
-      <Card className="border-gray-200 shadow-lg">
-        <CardHeader>
-          <CardTitle>About the Client</CardTitle>
+      <Card className="border-gray-200 shadow-sm overflow-hidden">
+        <CardHeader className="bg-gray-50 border-b">
+          <CardTitle>About {clientName}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <InfoItem icon={<Building />} label="Client" value={clientName} />
+        <CardContent className="p-6 space-y-4">
+          {clientLogo && (
+            <div className="flex items-center justify-center p-4 bg-white rounded-lg">
+              <img
+                src={clientLogo}
+                alt={`${clientName} Logo`}
+                className="max-h-16 w-auto"
+              />
+            </div>
+          )}
           <InfoItem
-            icon={<Building />}
+            icon={<Building className="text-gray-400" />}
             label="Industry"
             value={clientIndustry}
           />
@@ -304,17 +394,17 @@ function StickySidebar({
       </Card>
 
       {takeaways.length > 0 && (
-        <Card className="border-gray-200 shadow-lg">
+        <Card className="border-gray-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BookText className="w-5 h-5" />
+              <BookText className="w-5 h-5" style={{ color }} />
               Key Takeaways
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
               {takeaways.map((item: string, i: number) => (
-                <li key={i} className="flex items-start gap-2">
+                <li key={i} className="flex items-start gap-3">
                   <Check
                     className="w-5 h-5 shrink-0 mt-0.5"
                     style={{ color }}
@@ -328,20 +418,15 @@ function StickySidebar({
       )}
 
       {quote && (
-        <div className="relative">
-          <Quote
-            className="w-16 h-16 absolute -top-4 -left-4"
-            style={{ color }}
-            fillOpacity={0.1}
-            fill={color}
-          />
-          <blockquote
-            className="text-xl italic font-medium text-gray-800 pl-4 py-4"
-            style={{ borderLeft: `4px solid ${color}` }}
-          >
-            {quote}
-          </blockquote>
-        </div>
+        <blockquote
+          className="text-lg italic font-medium text-gray-800 p-4 rounded-lg"
+          style={{
+            borderLeft: `4px solid ${color}`,
+            backgroundColor: `rgba(${hexToRgb(color).join(", ")}, 0.05)`,
+          }}
+        >
+          &ldquo;{quote}&rdquo;
+        </blockquote>
       )}
     </>
   );
@@ -358,12 +443,12 @@ function InfoItem({
 }) {
   if (!value) return null;
   return (
-    <div>
-      <p className="text-sm font-medium text-gray-500">{label}</p>
-      <p className="text-base font-semibold text-gray-800 flex items-center gap-2">
-        {icon}
-        {value}
-      </p>
+    <div className="flex items-start gap-3">
+      <div className="shrink-0 mt-1">{icon}</div>
+      <div>
+        <p className="text-sm font-medium text-gray-500">{label}</p>
+        <p className="text-base font-medium text-gray-800">{value}</p>
+      </div>
     </div>
   );
 }
@@ -371,42 +456,166 @@ function InfoItem({
 function CtaSection({
   agencyName,
   color,
+  lightColor,
 }: {
   agencyName: string;
   color: string;
+  lightColor: string;
 }) {
   return (
-    <section id="contact" className="bg-gray-100">
-      <div className="max-w-5xl mx-auto px-6 py-16 md:py-20 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Ready to achieve similar results?
-        </h2>
-        <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-          Let {agencyName} help you overcome your challenges and reach your
-          goals. Get in touch with our team today to start your project.
-        </p>
-        <Button
-          size="lg"
-          asChild
-          style={{ backgroundColor: color, color: "white" }}
-          className="text-lg font-semibold px-8 py-6"
-        >
-          <Link href="#">
-            Contact Us <ChevronRight className="w-5 h-5 ml-2" />
-          </Link>
-        </Button>
+    <section id="contact" style={{ backgroundColor: lightColor }}>
+      <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left Column: Text */}
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Ready to build your success story?
+            </h2>
+            <p className="text-lg text-gray-600 mb-8 max-w-2xl">
+              Let {agencyName} help you overcome your challenges and reach your
+              goals. Get in touch with our team today to start your project.
+            </p>
+          </div>
+          {/* Right Column: Contact Card */}
+          <div className="bg-white p-8 rounded-lg shadow-lg">
+            <h3 className="text-2xl font-semibold mb-4">Speak to an expert</h3>
+            <p className="text-gray-600 mb-6">
+              We're ready to help. Fill out our form or email us directly.
+            </p>
+            <div className="space-y-4">
+              <Button
+                size="lg"
+                asChild
+                style={{ backgroundColor: color, color: "white" }}
+                className="w-full text-base font-semibold py-6"
+              >
+                <Link href="#">
+                  Contact Us <ChevronRight className="w-5 h-5 ml-2" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                asChild
+                className="w-full text-base font-semibold py-6 border-gray-300"
+              >
+                <Link href="mailto:sales@agency.com">
+                  <Mail className="w-5 h-5 mr-2" />
+                  sales@agency.com
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
-function PageFooter({ agencyName }: { agencyName: string }) {
+function PageFooter({
+  agencyName,
+  logo,
+}: {
+  agencyName: string;
+  logo: string | null;
+}) {
   return (
-    <footer className="bg-gray-800 text-gray-400">
-      <div className="max-w-7xl mx-auto px-6 py-8 text-center">
-        <p>
-          &copy; {new Date().getFullYear()} {agencyName}. All rights reserved.
-        </p>
+    <footer className="bg-gray-900 text-gray-400">
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+          {/* Column 1: Brand */}
+          <div className="col-span-2 lg:col-span-2">
+            <Link href="/" className="flex items-center gap-3 mb-4">
+              {logo ? (
+                <img
+                  src={logo}
+                  alt={`${agencyName} Logo`}
+                  className="h-8 w-auto filter grayscale invert"
+                />
+              ) : (
+                <span className="font-bold text-xl text-white">
+                  {agencyName}
+                </span>
+              )}
+            </Link>
+            <p className="text-base max-w-xs">
+              Delivering measurable results for ambitious brands.
+            </p>
+          </div>
+          {/* Column 2: Services */}
+          <div>
+            <h4 className="font-semibold text-white mb-4">Services</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link href="#" className="hover:text-white">
+                  Marketing
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white">
+                  Design
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white">
+                  Development
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white">
+                  Strategy
+                </Link>
+              </li>
+            </ul>
+          </div>
+          {/* Column 3: Company */}
+          <div>
+            <h4 className="font-semibold text-white mb-4">Company</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link href="#" className="hover:text-white">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white">
+                  Careers
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white">
+                  Blog
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white">
+                  Contact
+                </Link>
+              </li>
+            </ul>
+          </div>
+          {/* Column 4: Legal */}
+          <div>
+            <h4 className="font-semibold text-white mb-4">Legal</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link href="#" className="hover:text-white">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:text-white">
+                  Terms of Service
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className="mt-12 pt-8 border-t border-gray-700 text-center">
+          <p>
+            &copy; {new Date().getFullYear()} {agencyName}. All rights reserved.
+          </p>
+        </div>
       </div>
     </footer>
   );

@@ -1,4 +1,4 @@
-// app/dashboard/casestudies/[id]/PublishToggle.tsx
+// app/dashboard/case-studies/[id]/PublishToggle.tsx
 "use client";
 
 import { useState, useTransition } from "react";

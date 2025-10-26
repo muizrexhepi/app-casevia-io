@@ -1,4 +1,4 @@
-// app/dashboard/casestudies/[id]/actions.ts
+// app/dashboard/case-studies/[id]/actions.ts
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -100,8 +100,8 @@ export async function updatePublishStatus(
       );
 
     // 5. Revalidate paths to show changes
-    revalidatePath("/dashboard/casestudies"); // The list page
-    revalidatePath(`/dashboard/casestudies/${caseStudyId}`); // This page
+    revalidatePath("/dashboard/case-studies"); // The list page
+    revalidatePath(`/dashboard/case-studies/${caseStudyId}`); // This page
     if (slugToSet) {
       revalidatePath(`/${slugToSet}`); // The public page
     }

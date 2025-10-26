@@ -28,6 +28,9 @@ export async function POST(
       return NextResponse.json({ error: "No file URL found" }, { status: 400 });
     }
 
+    const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/assemblyai/${projectId}`;
+
+    console.log("Starting transcription with webhook:", webhookUrl);
     // 2. Submit to AssemblyAI for transcription
     const transcriptResponse = await fetch(
       `${ASSEMBLY_AI_BASE_URL}/transcript`,

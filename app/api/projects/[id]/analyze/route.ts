@@ -1,15 +1,19 @@
 // app/api/projects/[id]/analyze/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/drizzle";
-import { project, caseStudy, socialPost } from "@/lib/auth/schema";
+import { project, caseStudy, socialPost, user } from "@/lib/auth/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import OpenAI from "openai";
+import { Resend } from "resend";
+import CaseStudyReadyEmail from "@/components/emails/case-study-ready";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
   baseURL: "https://api.deepseek.com",
 });
+
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(
   request: NextRequest,
@@ -17,6 +21,8 @@ export async function POST(
 ) {
   try {
     const projectId = params.id;
+
+    console.log("Starting analysis for project:", projectId);
 
     // 1. Get project with transcript
     const [projectData] = await db
@@ -41,9 +47,10 @@ export async function POST(
       projectData.speakerLabels
     );
 
-    // 3. Call GPT-4o with the magic prompt
+    console.log("Calling AI for analysis...");
+
+    // 3. Call AI
     const completion = await openai.chat.completions.create({
-      // model: "gpt-4o",
       model: "deepseek-chat",
       messages: [
         {
@@ -62,6 +69,8 @@ export async function POST(
     const analysisResult = JSON.parse(
       completion.choices[0].message.content || "{}"
     );
+
+    console.log("AI analysis complete, saving to database...");
 
     // 4. Generate SEO-friendly slug
     const slug = generateSlug(analysisResult.title);
@@ -121,6 +130,45 @@ export async function POST(
       })
       .where(eq(project.id, projectId));
 
+    console.log("Case study created, sending email notification...");
+
+    // 8. 📧 SEND EMAIL NOTIFICATION
+    try {
+      // Get user email
+      const [userData] = await db
+        .select({
+          email: user.email,
+          name: user.name,
+        })
+        .from(user)
+        .where(eq(user.id, projectData.userId));
+
+      if (userData?.email) {
+        const { data, error } = await resend.emails.send({
+          from: `Casevia <${process.env.RESEND_FROM_EMAIL}>`,
+          to: userData.email,
+          subject: `🎉 Your case study "${analysisResult.title}" is ready!`,
+          react: CaseStudyReadyEmail({
+            userName: userData.name || "there",
+            caseStudyTitle: analysisResult.title,
+            projectId: projectData.id,
+            caseStudyId,
+          }),
+        });
+
+        if (error) {
+          console.error("Email error:", error);
+        } else {
+          console.log("Email sent successfully:", data);
+        }
+      }
+    } catch (emailError) {
+      // Don't fail the whole request if email fails
+      console.error("Email error:", emailError);
+    }
+
+    console.log("Analysis complete!");
+
     return NextResponse.json({
       success: true,
       caseStudyId,
@@ -146,7 +194,7 @@ export async function POST(
   }
 }
 
-// Helper function to format transcript with speaker labels
+// Helper functions
 function formatTranscriptWithSpeakers(
   transcript: string,
   speakerLabels: any
@@ -164,7 +212,6 @@ function formatTranscriptWithSpeakers(
     .join("\n\n");
 }
 
-// Generate URL-friendly slug
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
@@ -173,7 +220,6 @@ function generateSlug(title: string): string {
     .substring(0, 60);
 }
 
-// The magic prompt for GPT-4o
 const CASE_STUDY_SYSTEM_PROMPT = `You are an expert B2B case study writer and marketing analyst with 15+ years of experience creating compelling customer success stories for SaaS companies, agencies, and professional services.
 
 Your task is to analyze customer interview transcripts and extract the key information needed to create a professional, persuasive case study.
@@ -223,5 +269,12 @@ CRITICAL INSTRUCTIONS:
 6. Make the narrative compelling but truthful
 7. If critical information is missing, use null or provide a general description
 8. Keep the tone professional and suitable for B2B marketing
+
+When writing social media posts (LinkedIn or X):
+- Use the tone of a B2B marketing agency sharing a success story.
+- Mention measurable outcomes only if explicitly in the transcript.
+- Keep posts human-sounding, not overly “AI polished”.
+- Avoid repeating the case study title exactly.
+- For X threads, make the first tweet a high-impact hook that can stand alone.
 
 Return ONLY valid JSON. No additional text.`;

@@ -22,7 +22,7 @@ export default async function AuthLayout({
   // If user already has an organization, redirect to dashboard
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full p-6 max-w-md">
         {/* <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Casevia</h1>

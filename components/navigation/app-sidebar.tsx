@@ -31,7 +31,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navMain = [
     { title: "Dashboard", url: "/dashboard", icon: SquareTerminal },
     { title: "Case Studies", url: "/dashboard/case-studies", icon: BookOpen },
-    { title: "Generate", url: "/dashboard/generate", icon: Bot },
+    { title: "Projects", url: "/dashboard/projects", icon: Bot },
     { title: "Analytics", url: "/dashboard/analytics", icon: PieChart },
     { title: "Library", url: "/dashboard/library", icon: Frame },
   ];

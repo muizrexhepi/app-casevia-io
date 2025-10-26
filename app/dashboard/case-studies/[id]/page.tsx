@@ -1,4 +1,4 @@
-// app/dashboard/casestudies/[id]/page.tsx
+// app/dashboard/case-studies/[id]/page.tsx
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -74,7 +74,7 @@ export default async function CaseStudyDetailPage({
         <div className="flex items-start justify-between mb-8 gap-4">
           <div>
             <Link
-              href="/dashboard/casestudies"
+              href="/dashboard/case-studies"
               className="flex items-center text-sm text-muted-foreground hover:text-foreground mb-2"
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
