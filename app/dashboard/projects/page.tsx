@@ -8,6 +8,7 @@ import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import { Plus, FileText } from "lucide-react";
 import { ProjectsList } from "@/components/projects/projects-list";
+import { Button } from "@/components/ui/button";
 
 export default async function ProjectsPage() {
   // Get authenticated session
@@ -49,13 +50,12 @@ export default async function ProjectsPage() {
               Manage your customer interviews and case studies
             </p>
           </div>
-          <Link
-            href="/dashboard/projects/new"
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors flex items-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            New Project
-          </Link>
+          <Button asChild size={"lg"}>
+            <Link href="/dashboard/projects/new">
+              <Plus className="w-5 h-5" />
+              New Project
+            </Link>
+          </Button>
         </div>
 
         {/* Projects List with Subscription Context */}
