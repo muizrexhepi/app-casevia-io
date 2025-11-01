@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth/server";
+import { Sparkles } from "lucide-react";
 
 export default async function AuthLayout({
   children,
@@ -12,22 +13,35 @@ export default async function AuthLayout({
   });
 
   if (session) {
-    redirect("/dashboard");
+    const organizations = await auth.api.listOrganizations({
+      headers: await headers(),
+    });
+
+    if (organizations && organizations.length > 0) {
+      redirect("/dashboard");
+    }
+
+    redirect("/onboarding");
   }
 
-  // const organizations = await auth.api.listOrganizations({
-  //   headers: await headers(),
-  // });
-
-  // If user already has an organization, redirect to dashboard
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full p-6 max-w-md">
-        {/* <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Casevia</h1>
-        </div> */}
-        {children}
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* Minimal branding header */}
+      <div className="flex items-center gap-2 px-6 py-4">
+        <div className="w-7 h-7 bg-black rounded-lg flex items-center justify-center">
+          <Sparkles className="w-4 h-4 text-white" />
+        </div>
+        <span className="text-sm font-semibold">Casevia</span>
+      </div>
+
+      {/* Centered auth forms */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md">{children}</div>
+      </div>
+
+      {/* Footer */}
+      <div className="px-6 py-4 text-center text-xs text-gray-500">
+        © 2024 Casevia. All rights reserved.
       </div>
     </div>
   );

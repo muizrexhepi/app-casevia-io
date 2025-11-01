@@ -1,7 +1,5 @@
-import { AppSidebar } from "@/components/navigation/app-sidebar";
 import { NavHeader } from "@/components/navigation/nav-header";
 import { OrganizationAutoSelector } from "@/components/org-selector";
-import { AuthGuard } from "@/components/providers/auth-provider";
 import { SettingsSidebar } from "@/components/settings/settings-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { auth } from "@/lib/auth/server";
@@ -22,7 +20,7 @@ export default async function SettingsLayout({
   }
 
   return (
-    <AuthGuard>
+    <>
       <OrganizationAutoSelector />
       <SidebarProvider>
         <SettingsSidebar />
@@ -33,6 +31,6 @@ export default async function SettingsLayout({
           </div>
         </SidebarInset>
       </SidebarProvider>
-    </AuthGuard>
+    </>
   );
 }

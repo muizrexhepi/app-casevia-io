@@ -1,12 +1,9 @@
-// app/dashboard/case-studies/page.tsx
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/drizzle";
 import { caseStudy, planLimits } from "@/lib/auth/schema"; // Import caseStudy table
 import { eq, desc } from "drizzle-orm";
-import Link from "next/link";
-import { BookText } from "lucide-react"; // Changed icon
 import { CaseStudiesList } from "@/components/case-studies/case-studies-list";
 
 export default async function CaseStudiesPage() {

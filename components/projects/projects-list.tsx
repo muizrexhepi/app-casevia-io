@@ -10,28 +10,22 @@ import {
   Calendar,
   Film,
   FileAudio,
-  Loader2, // Changed from Clock for a better "processing" animation
+  Loader2,
 } from "lucide-react";
-import { useCurrentPlan } from "../providers/subscription-provider";
-import { cn } from "@/lib/utils"; // Assuming you have a cn utility
+import { useSubscription } from "../providers/subscription-provider";
+import { cn } from "@/lib/utils";
 
-// ====================================================================
-// 1. TYPES (from your schema)
-// ====================================================================
-
-// Define the shape of a project based on your schema and card usage
 type Project = {
   id: string;
   title: string;
   fileName: string | null;
-  status: string; // "uploading" | "transcribing" | "analyzing" | "ready" | "failed"
+  status: string;
   createdAt: string | Date;
   durationSeconds: number | null;
   fileSize: number | null;
   errorMessage: string | null;
 };
 
-// Define the shape of the limits prop
 type ProjectPageLimits = {
   caseStudiesUsed: number;
   storageUsedMb: number;
@@ -41,10 +35,6 @@ interface ProjectsListProps {
   projects: Project[];
   initialLimits: ProjectPageLimits;
 }
-
-// ====================================================================
-// 2. HELPER: Utility Functions
-// ====================================================================
 
 const formatDate = (date: Date | string) => {
   return new Date(date).toLocaleDateString("en-US", {
@@ -70,29 +60,24 @@ const formatFileSize = (bytes: number | null) => {
 };
 
 const getFileIcon = (fileName: string | null) => {
-  if (!fileName) return <FileText className="w-5 h-5 text-muted-foreground" />;
+  if (!fileName) return <FileText className="w-5 h-5 text-gray-400" />;
 
   if (fileName.match(/\.(mp4|mov|avi|webm)$/i)) {
-    return <Film className="w-5 h-5 text-muted-foreground" />;
+    return <Film className="w-5 h-5 text-gray-400" />;
   }
 
   if (fileName.match(/\.(mp3|wav|m4a|ogg)$/i)) {
-    return <FileAudio className="w-5 h-5 text-muted-foreground" />;
+    return <FileAudio className="w-5 h-5 text-gray-400" />;
   }
 
-  return <FileText className="w-5 h-5 text-muted-foreground" />;
+  return <FileText className="w-5 h-5 text-gray-400" />;
 };
-
-// ====================================================================
-// 3. MAIN COMPONENT: ProjectsList
-// ====================================================================
 
 export function ProjectsList({ projects, initialLimits }: ProjectsListProps) {
   return (
     <>
       <UsageStats initialLimits={initialLimits} />
 
-      {/* Projects List */}
       {projects.length === 0 ? (
         <EmptyState />
       ) : (
@@ -106,26 +91,33 @@ export function ProjectsList({ projects, initialLimits }: ProjectsListProps) {
   );
 }
 
-// ====================================================================
-// 4. HELPER COMPONENT: UsageStats
-// ====================================================================
-
 function UsageStats({ initialLimits }: { initialLimits: ProjectPageLimits }) {
-  const currentPlan = useCurrentPlan();
+  const { currentPlan, isLoading } = useSubscription();
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
+        <div className="flex items-center justify-center">
+          <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
   const usagePercentage =
-    (initialLimits.caseStudiesUsed / currentPlan.limits.caseStudies) * 100;
+    (initialLimits?.caseStudiesUsed / currentPlan.limits.caseStudies) * 100;
 
   return (
-    <div className="bg-card rounded-lg border border-border shadow-sm p-6 mb-6">
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">
+          <h3 className="text-sm font-semibold text-gray-900">
             {currentPlan.name} Plan
           </h3>
-          <p className="text-xs text-muted-foreground mt-1">Monthly usage</p>
+          <p className="text-xs text-gray-500 mt-1">Monthly usage</p>
         </div>
         <Link
-          href="/dashboard/settings/billing"
+          href="/settings/billing"
           className="text-sm text-blue-600 hover:text-blue-700 font-medium"
         >
           Manage Plan
@@ -134,12 +126,12 @@ function UsageStats({ initialLimits }: { initialLimits: ProjectPageLimits }) {
 
       <div>
         <div className="flex justify-between text-sm mb-2">
-          <span className="text-muted-foreground">Case Studies</span>
-          <span className="font-medium text-foreground">
-            {initialLimits.caseStudiesUsed} / {currentPlan.limits.caseStudies}
+          <span className="text-gray-600">Case Studies</span>
+          <span className="font-medium text-gray-900">
+            {initialLimits?.caseStudiesUsed} / {currentPlan.limits.caseStudies}
           </span>
         </div>
-        <div className="w-full bg-border rounded-full h-2">
+        <div className="w-full bg-gray-200 rounded-full h-2">
           <div
             className={cn(
               "h-2 rounded-full transition-all",
@@ -154,22 +146,22 @@ function UsageStats({ initialLimits }: { initialLimits: ProjectPageLimits }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 pt-4 mt-4 border-t border-border">
+      <div className="grid grid-cols-3 gap-4 pt-4 mt-4 border-t border-gray-100">
         <div>
-          <p className="text-xs text-muted-foreground">Storage Used</p>
-          <p className="text-sm font-medium text-foreground">
-            {initialLimits.storageUsedMb} / {currentPlan.limits.storage} MB
+          <p className="text-xs text-gray-500">Storage Used</p>
+          <p className="text-sm font-medium text-gray-900">
+            {initialLimits?.storageUsedMb} / {currentPlan.limits.storage} MB
           </p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">Max File Length</p>
-          <p className="text-sm font-medium text-foreground">
+          <p className="text-xs text-gray-500">Max File Length</p>
+          <p className="text-sm font-medium text-gray-900">
             {currentPlan.limits.videoLength} min
           </p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">Team Seats</p>
-          <p className="text-sm font-medium text-foreground">
+          <p className="text-xs text-gray-500">Team Seats</p>
+          <p className="text-sm font-medium text-gray-900">
             {currentPlan.limits.teamSeats === -1
               ? "Unlimited"
               : currentPlan.limits.teamSeats}
@@ -180,10 +172,6 @@ function UsageStats({ initialLimits }: { initialLimits: ProjectPageLimits }) {
   );
 }
 
-// ====================================================================
-// 5. HELPER COMPONENT: ProjectCard
-// ====================================================================
-
 function ProjectCard({ project }: { project: Project }) {
   const duration = formatDuration(project.durationSeconds);
   const fileSize = formatFileSize(project.fileSize);
@@ -192,18 +180,18 @@ function ProjectCard({ project }: { project: Project }) {
     <Link
       href={`/dashboard/projects/${project.id}`}
       className={cn(
-        "block bg-card rounded-lg border border-border p-6",
-        "transition-colors hover:bg-muted/50" // Subtle enterprise hover
+        "block bg-white rounded-lg border border-gray-200 p-6",
+        "transition-all hover:shadow-md hover:border-gray-300"
       )}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 flex items-start gap-3">
           <div className="shrink-0 mt-1">{getFileIcon(project.fileName)}</div>
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-1">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">
               {project.title}
             </h3>
-            <p className="text-sm text-muted-foreground">{project.fileName}</p>
+            <p className="text-sm text-gray-500">{project.fileName}</p>
           </div>
         </div>
         <div className="flex-shrink-0">
@@ -211,9 +199,7 @@ function ProjectCard({ project }: { project: Project }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-6 text-sm text-muted-foreground pl-[32px]">
-        {" "}
-        {/* 20px icon + 12px gap = 32px */}
+      <div className="flex items-center gap-6 text-sm text-gray-500 pl-[32px]">
         <div className="flex items-center gap-1">
           <Calendar className="w-4 h-4" />
           {formatDate(project.createdAt)}
@@ -236,43 +222,39 @@ function ProjectCard({ project }: { project: Project }) {
   );
 }
 
-// ====================================================================
-// 6. HELPER COMPONENT: ProjectStatusBadge
-// ====================================================================
-
 function ProjectStatusBadge({ status }: { status: string }) {
   switch (status) {
     case "uploading":
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded">
           <Loader2 className="w-3 h-3 animate-spin" />
           Uploading
         </span>
       );
     case "transcribing":
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 text-xs font-medium rounded">
           <Loader2 className="w-3 h-3 animate-spin" />
           Transcribing
         </span>
       );
     case "analyzing":
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded">
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 text-indigo-700 text-xs font-medium rounded">
           <Loader2 className="w-3 h-3 animate-spin" />
           Analyzing
         </span>
       );
     case "ready":
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs font-medium rounded">
           <CheckCircle2 className="w-3 h-3" />
           Ready
         </span>
       );
     case "failed":
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 text-xs font-medium rounded">
           <AlertCircle className="w-3 h-3" />
           Failed
         </span>
@@ -282,18 +264,14 @@ function ProjectStatusBadge({ status }: { status: string }) {
   }
 }
 
-// ====================================================================
-// 7. HELPER COMPONENT: EmptyState
-// ====================================================================
-
 function EmptyState() {
   return (
-    <div className="bg-card rounded-lg shadow-sm border border-border p-12 text-center">
-      <FileText className="w-16 h-16 mx-auto mb-4 text-foreground" />
-      <h3 className="text-lg font-semibold text-foreground mb-2">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+      <FileText className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">
         No projects yet
       </h3>
-      <p className="text-muted-foreground mb-6">
+      <p className="text-gray-500 mb-6">
         Create your first project to start generating case studies
       </p>
       <Link

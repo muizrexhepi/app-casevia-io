@@ -1,4 +1,3 @@
-// app/dashboard/projects/[id]/project-status-view.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -14,7 +13,8 @@ import {
   RefreshCw,
   Upload as UploadIcon,
 } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface ProjectStatusViewProps {
   project: any;
@@ -27,7 +27,6 @@ export function ProjectStatusView({
   const [project, setProject] = useState(initialProject);
   const [isPolling, setIsPolling] = useState(false);
 
-  // Poll for status updates when processing
   useEffect(() => {
     const shouldPoll = ["uploading", "transcribing", "analyzing"].includes(
       project.status
@@ -47,16 +46,25 @@ export function ProjectStatusView({
           const data = await response.json();
           setProject(data.project);
 
-          // Stop polling if status is final
           if (["ready", "failed"].includes(data.project.status)) {
             clearInterval(pollInterval);
             setIsPolling(false);
+
+            if (data.project.status === "ready") {
+              toast.success("Your case study is ready!", {
+                action: {
+                  label: "View",
+                  onClick: () =>
+                    router.push(`/dashboard/projects/${project.id}/case-study`),
+                },
+              });
+            }
           }
         }
       } catch (error) {
         console.error("Failed to fetch project status:", error);
       }
-    }, 3000); // Poll every 3 seconds
+    }, 3000);
 
     return () => clearInterval(pollInterval);
   }, [project.id, project.status]);
@@ -140,6 +148,8 @@ export function ProjectStatusView({
   };
 
   const handleRetry = async () => {
+    const retryToast = toast.loading("Retrying processing...");
+
     try {
       const response = await fetch(`/api/projects/${project.id}/retry`, {
         method: "POST",
@@ -148,9 +158,12 @@ export function ProjectStatusView({
       if (response.ok) {
         const data = await response.json();
         setProject(data.project);
+        toast.success("Processing restarted!", { id: retryToast });
+      } else {
+        throw new Error("Failed to retry");
       }
     } catch (error) {
-      console.error("Failed to retry:", error);
+      toast.error("Failed to retry processing", { id: retryToast });
     }
   };
 
@@ -159,65 +172,63 @@ export function ProjectStatusView({
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => router.push("/dashboard/projects")}
-            className="text-sm text-muted-foreground hover:text-foreground mb-4 flex items-center gap-2"
+            className="text-sm text-gray-600 hover:text-gray-900 mb-4 flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Projects
           </button>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {project.title}
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-gray-600 text-sm">
             Created {formatDate(project.createdAt)}
           </p>
         </div>
 
         {/* Status Card */}
-        <div className="bg-card rounded-xl shadow-sm border border-border p-8 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-6">
           <div className="flex items-start gap-6">
             <div className="shrink-0">{statusInfo.icon}</div>
 
             <div className="flex-1">
               <div className="flex items-start justify-between mb-2">
-                <h2 className="text-xl font-semibold text-foreground">
+                <h2 className="text-xl font-semibold text-gray-900">
                   {statusInfo.title}
                 </h2>
                 {isPolling && (
-                  <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-2 text-sm text-gray-500">
                     <RefreshCw className="w-4 h-4 animate-spin" />
                     Updating...
                   </span>
                 )}
               </div>
-              <p className="text-muted-foreground mb-6">
-                {statusInfo.description}
-              </p>
+              <p className="text-gray-600 mb-6">{statusInfo.description}</p>
 
               {/* Progress Bar */}
               {project.status !== "failed" && (
                 <div className="mb-6">
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Progress</span>
-                    <span className="font-medium text-foreground">
+                    <span className="text-gray-500">Progress</span>
+                    <span className="font-medium text-gray-900">
                       {statusInfo.progress}%
                     </span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div
-                      className={`h-3 rounded-full transition-all duration-500 bg-linear-to-r ${
+                      className={`h-3 rounded-full transition-all duration-500 ${
                         statusInfo.color === "blue"
-                          ? "from-blue-500 to-blue-600"
+                          ? "bg-gradient-to-r from-blue-500 to-blue-600"
                           : statusInfo.color === "purple"
-                          ? "from-purple-500 to-purple-600"
+                          ? "bg-gradient-to-r from-purple-500 to-purple-600"
                           : statusInfo.color === "indigo"
-                          ? "from-indigo-500 to-indigo-600"
-                          : "from-green-500 to-green-600"
+                          ? "bg-gradient-to-r from-indigo-500 to-indigo-600"
+                          : "bg-gradient-to-r from-green-500 to-green-600"
                       }`}
                       style={{ width: `${statusInfo.progress}%` }}
                     />
@@ -257,16 +268,16 @@ export function ProjectStatusView({
                 </div>
               )}
 
-              {/* Ready State - Show CTA */}
+              {/* Ready State */}
               {project.status === "ready" && (
                 <div className="flex gap-3 mt-6">
-                  <Button onClick={handleViewCaseStudy} size={"lg"}>
+                  <Button onClick={handleViewCaseStudy} size="lg">
                     Review Case Study
                   </Button>
                   {project.transcript && (
                     <Button
-                      size={"lg"}
-                      variant={"outline"}
+                      size="lg"
+                      variant="outline"
                       onClick={() =>
                         router.push(
                           `/dashboard/projects/${project.id}/transcript`
@@ -279,21 +290,16 @@ export function ProjectStatusView({
                 </div>
               )}
 
-              {/* Failed State - Show Retry */}
+              {/* Failed State */}
               {project.status === "failed" && (
                 <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={handleRetry}
-                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
-                  >
-                    Retry Processing
-                  </button>
-                  <button
+                  <Button onClick={handleRetry}>Retry Processing</Button>
+                  <Button
+                    variant="outline"
                     onClick={() => router.push("/dashboard/projects/new")}
-                    className="px-6 py-3 border border-slate-300 hover:border-slate-400 text-slate-700 font-medium rounded-lg transition-colors"
                   >
                     Upload New File
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -301,51 +307,37 @@ export function ProjectStatusView({
         </div>
 
         {/* File Details */}
-        <div className="bg-card rounded-xl shadow-sm border p-6 mb-6">
-          <h3 className="font-semibold text-foreground mb-4">File Details</h3>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <h3 className="font-semibold text-gray-900 mb-4">File Details</h3>
 
           <div className="grid md:grid-cols-3 gap-6">
             <div>
-              <p className="text-xs text-muted-freground mb-1">File Name</p>
-              <p className="text-sm font-medium text-foreground break-all">
+              <p className="text-xs text-gray-500 mb-1">File Name</p>
+              <p className="text-sm font-medium text-gray-900 break-all">
                 {project.fileName}
               </p>
             </div>
 
             <div>
-              <p className="text-xs text-muted-freground mb-1">Duration</p>
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-xs text-gray-500 mb-1">Duration</p>
+              <p className="text-sm font-medium text-gray-900">
                 {formatDuration(project.durationSeconds)}
               </p>
             </div>
 
             <div>
-              <p className="text-xs text-muted-freground mb-1">File Size</p>
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-xs text-gray-500 mb-1">File Size</p>
+              <p className="text-sm font-medium text-gray-900">
                 {formatFileSize(project.fileSize)}
               </p>
             </div>
           </div>
-
-          {project.fileUrl && (
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-xs text-muted-freground mb-2">File Location</p>
-              <a
-                href={project.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:text-blue-700 break-all"
-              >
-                {project.fileUrl}
-              </a>
-            </div>
-          )}
         </div>
 
         {/* Estimated Time */}
         {(project.status === "transcribing" ||
           project.status === "analyzing") && (
-          <div className="p-4 bg-blue-50 border rounded-lg">
+          <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
             <p className="text-sm text-blue-900">
               <span className="font-semibold">Estimated time remaining:</span>{" "}
               2-5 minutes
@@ -353,28 +345,6 @@ export function ProjectStatusView({
             <p className="text-xs text-blue-700 mt-1">
               You can safely close this page. We'll email you when it's ready.
             </p>
-          </div>
-        )}
-
-        {/* Transcript Preview (if available) */}
-        {project.transcript && project.status === "ready" && (
-          <div className="bg-card rounded-xl shadow-sm border p-6 mt-6">
-            <h3 className="font-semibold text-foreground mb-4">
-              Transcript Preview
-            </h3>
-            <div className="bg-muted rounded-lg p-4 max-h-48 overflow-y-auto">
-              <p className="text-sm text-accent-foreground whitespace-pre-wrap line-clamp-6">
-                {project.transcript.substring(0, 500)}...
-              </p>
-            </div>
-            <button
-              onClick={() =>
-                router.push(`/dashboard/projects/${project.id}/transcript`)
-              }
-              className="mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              View Full Transcript →
-            </button>
           </div>
         )}
       </div>
@@ -400,7 +370,7 @@ function ProcessingStep({
           ? "text-blue-600"
           : isComplete
           ? "text-green-600"
-          : "text-slate-300"
+          : "text-gray-300"
       }`}
     >
       {isComplete ? <CheckCircle2 className="w-5 h-5" /> : icon}

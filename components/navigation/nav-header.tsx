@@ -26,32 +26,37 @@ export function NavHeader() {
       />
       <Breadcrumb>
         <BreadcrumbList>
-          {segments.map((segment, idx) => (
-            <BreadcrumbItem
-              key={idx}
-              className={idx === segments.length - 1 ? "hidden md:block" : ""}
-            >
-              {idx === segments.length - 1 ? (
-                <BreadcrumbPage className="capitalize">
-                  {segment}
-                </BreadcrumbPage>
-              ) : (
-                <>
-                  <BreadcrumbLink
-                    href={"/" + segments.slice(0, idx + 1).join("/")}
-                    className="capitalize"
-                  >
-                    {segment}
-                  </BreadcrumbLink>
-                  <BreadcrumbSeparator />
-                </>
-              )}
-            </BreadcrumbItem>
-          ))}
-          {segments.length === 0 && (
+          {segments.length === 0 ? (
             <BreadcrumbItem>
               <BreadcrumbPage>{current}</BreadcrumbPage>
             </BreadcrumbItem>
+          ) : (
+            segments.map((segment, idx) => {
+              const isLast = idx === segments.length - 1;
+
+              return (
+                <BreadcrumbItem
+                  key={idx}
+                  className={isLast ? "hidden md:block" : ""}
+                >
+                  {isLast ? (
+                    <BreadcrumbPage className="capitalize">
+                      {segment}
+                    </BreadcrumbPage>
+                  ) : (
+                    <>
+                      <BreadcrumbLink
+                        href={"/" + segments.slice(0, idx + 1).join("/")}
+                        className="capitalize"
+                      >
+                        {segment}
+                      </BreadcrumbLink>
+                      {idx < segments.length - 1 && <BreadcrumbSeparator />}
+                    </>
+                  )}
+                </BreadcrumbItem>
+              );
+            })
           )}
         </BreadcrumbList>
       </Breadcrumb>

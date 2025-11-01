@@ -11,11 +11,12 @@ import {
   Building,
   Pencil,
   CheckCircle2,
+  Loader2,
 } from "lucide-react";
-import { cn } from "@/lib/utils"; // Assuming you have a cn utility
+import { cn } from "@/lib/utils";
 
 // ====================================================================
-// 1. TYPES (from your schema)
+// TYPES
 // ====================================================================
 
 type EnterpriseCaseStudy = {
@@ -31,7 +32,6 @@ type EnterpriseCaseStudy = {
 
 type EnterprisePlanLimits = {
   caseStudiesUsed: number;
-  // Add other limits as needed
 };
 
 interface CaseStudiesListProps {
@@ -40,7 +40,7 @@ interface CaseStudiesListProps {
 }
 
 // ====================================================================
-// 2. HELPER: Utility Functions
+// HELPER FUNCTIONS
 // ====================================================================
 
 const formatDate = (date: Date | string) => {
@@ -52,7 +52,7 @@ const formatDate = (date: Date | string) => {
 };
 
 // ====================================================================
-// 3. MAIN COMPONENT: CaseStudiesList
+// MAIN COMPONENT
 // ====================================================================
 
 export function CaseStudiesList({
@@ -61,8 +61,9 @@ export function CaseStudiesList({
 }: CaseStudiesListProps) {
   const currentPlan = useCurrentPlan();
 
+  // Compare initialLimits.caseStudiesUsed with currentPlan.limits.caseStudies
   const isOverLimit =
-    initialLimits.caseStudiesUsed >= currentPlan.limits.caseStudies;
+    initialLimits?.caseStudiesUsed >= currentPlan.limits.caseStudies;
 
   return (
     <>
@@ -87,7 +88,7 @@ export function CaseStudiesList({
 }
 
 // ====================================================================
-// 4. HELPER COMPONENT: EnterpriseCaseStudyCard
+// CASE STUDY CARD
 // ====================================================================
 
 function EnterpriseCaseStudyCard({
@@ -100,12 +101,10 @@ function EnterpriseCaseStudyCard({
       href={`/dashboard/case-studies/${caseStudy.id}`}
       className={cn(
         "block bg-card rounded-lg border border-border p-6",
-        "transition-colors hover:bg-muted/50" // Subtle enterprise hover
+        "transition-colors hover:bg-muted/50"
       )}
     >
-      {/* Top Row: Main Info + Status */}
       <div className="flex items-start justify-between mb-3">
-        {/* Left Side: Icon + Title/Client */}
         <div className="flex-1 flex items-start gap-3">
           <BookText className="w-5 h-5 text-muted-foreground mt-1" />
           <div className="flex-1">
@@ -117,17 +116,12 @@ function EnterpriseCaseStudyCard({
             </p>
           </div>
         </div>
-
-        {/* Right Side: Status */}
         <div className="flex-shrink-0">
           <StatusBadge published={caseStudy.published} />
         </div>
       </div>
 
-      {/* Bottom Row: Meta Info (indented to align with title) */}
       <div className="flex items-center gap-6 text-sm text-muted-foreground pl-[32px]">
-        {" "}
-        {/* 20px icon + 12px gap = 32px */}
         <div className="flex items-center gap-1">
           <Calendar className="w-4 h-4" />
           {formatDate(caseStudy.createdAt)}
@@ -148,7 +142,7 @@ function EnterpriseCaseStudyCard({
 }
 
 // ====================================================================
-// 5. HELPER COMPONENT: StatusBadge
+// STATUS BADGE
 // ====================================================================
 
 function StatusBadge({ published }: { published: boolean }) {
@@ -169,7 +163,7 @@ function StatusBadge({ published }: { published: boolean }) {
 }
 
 // ====================================================================
-// 6. HELPER COMPONENT: EmptyState
+// EMPTY STATE
 // ====================================================================
 
 function EmptyState() {

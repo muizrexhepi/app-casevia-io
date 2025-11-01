@@ -51,7 +51,7 @@ export const auth = betterAuth({
               slug: "agency-yearly",
             },
           ],
-          successUrl: `${process.env.BASE_URL}/billing?checkout=success&checkout_id={CHECKOUT_ID}`,
+          successUrl: `${process.env.BETTER_AUTH_URL}/billing?checkout=success&checkout_id={CHECKOUT_ID}`,
           authenticatedUsersOnly: true,
         }),
         portal(),

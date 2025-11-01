@@ -1,10 +1,11 @@
 import { AppSidebar } from "@/components/navigation/app-sidebar";
 import { NavHeader } from "@/components/navigation/nav-header";
-import { AuthGuard } from "@/components/providers/auth-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { auth } from "@/lib/auth/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { DashboardLoadingFallback } from "@/components/loading-fallback";
 
 export default async function DashboardLayout({
   children,
@@ -18,15 +19,26 @@ export default async function DashboardLayout({
   if (!session) {
     redirect("/sign-in");
   }
+
+  const organizations = await auth.api.listOrganizations({
+    headers: await headers(),
+  });
+
+  if (!organizations || organizations.length === 0) {
+    redirect("/onboarding");
+  }
+
   return (
-    <AuthGuard>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <NavHeader />
-          <main className="flex-1 overflow-y-auto">{children}</main>
-        </SidebarInset>
-      </SidebarProvider>
-    </AuthGuard>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <NavHeader />
+        <main className="flex-1 overflow-y-auto">
+          <Suspense fallback={<DashboardLoadingFallback />}>
+            {children}
+          </Suspense>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

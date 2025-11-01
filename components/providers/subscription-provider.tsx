@@ -5,17 +5,26 @@ import {
   useContext,
   useEffect,
   useState,
+  useCallback,
   ReactNode,
 } from "react";
 import { authClient, useActiveOrganization } from "@/lib/auth/client";
-import { PLANS, type PlanId } from "@/lib/constants/plans";
+import { PLANS, type Plan } from "@/lib/constants/plans";
 
 interface SubscriptionData {
-  currentPlan: PlanId;
+  currentPlan: Plan;
   activeSubscription: any | null;
   customerState: any | null;
   isLoading: boolean;
+  isInitializing: boolean;
+  error: string | null;
   refresh: () => Promise<void>;
+  canAccess: {
+    createCaseStudy: (currentCount: number) => boolean;
+    uploadVideo: (durationMinutes: number) => boolean;
+    useStorage: (usedMB: number) => boolean;
+    hasFeature: (feature: keyof Plan["limits"]) => boolean;
+  };
 }
 
 const SubscriptionContext = createContext<SubscriptionData | undefined>(
@@ -23,59 +32,103 @@ const SubscriptionContext = createContext<SubscriptionData | undefined>(
 );
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { data: activeOrg } = useActiveOrganization();
+  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization();
   const [customerState, setCustomerState] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchSubscription = async () => {
+  const fetchSubscription = useCallback(async () => {
     if (!activeOrg?.id) {
+      setIsInitializing(false);
       setIsLoading(false);
       return;
     }
 
     try {
       setIsLoading(true);
-      const { data: state } = await authClient.customer.state();
-      setCustomerState(state);
-    } catch (error) {
-      console.error("Failed to fetch subscription:", error);
+      setError(null);
+
+      const { data: state, error: fetchError } =
+        await authClient.customer.state();
+
+      if (fetchError) {
+        console.error("Subscription fetch error:", fetchError);
+        // Don't throw - just use free plan as fallback
+        setCustomerState(null);
+      } else {
+        setCustomerState(state);
+      }
+    } catch (err) {
+      console.error("Failed to fetch subscription:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
       setCustomerState(null);
     } finally {
       setIsLoading(false);
+      setIsInitializing(false);
     }
-  };
-
-  useEffect(() => {
-    fetchSubscription();
   }, [activeOrg?.id]);
 
-  // Get active subscription
+  useEffect(() => {
+    if (isOrgPending) {
+      return; // Wait for organization to load
+    }
+
+    if (activeOrg?.id) {
+      fetchSubscription();
+    } else {
+      // No active org - set to initialized with free plan
+      setIsInitializing(false);
+      setIsLoading(false);
+    }
+  }, [activeOrg?.id, isOrgPending, fetchSubscription]);
+
   const activeSubscription = customerState?.activeSubscriptions?.[0] || null;
 
-  // Determine current plan based on subscription amount
-  const getCurrentPlan = (): PlanId => {
-    if (!activeSubscription) return "free";
+  const getCurrentPlan = useCallback((): Plan => {
+    if (!activeSubscription) return PLANS[0];
 
-    const amount = activeSubscription.amount;
+    const productSlug = activeSubscription.product?.slug;
+    if (productSlug) {
+      const baseSlug = productSlug.replace(/-(monthly|yearly)$/, "");
+      const planBySlug = PLANS.find((p) => p.slug === baseSlug);
+      if (planBySlug) return planBySlug;
+    }
 
-    // Match based on price (amounts are in cents)
-    if (amount >= 14900) return "agency"; // $149+
-    if (amount >= 7900) return "pro"; // $79+
-    if (amount >= 2900) return "freelancer"; // $29+
+    const amount = activeSubscription.amount || 0;
+    const monthlyAmount =
+      activeSubscription.recurringInterval === "year"
+        ? Math.round(amount / 12)
+        : amount;
 
-    return "free";
-  };
+    if (monthlyAmount >= 14900) return PLANS.find((p) => p.id === "agency")!;
+    if (monthlyAmount >= 7900) return PLANS.find((p) => p.id === "pro")!;
+    if (monthlyAmount >= 2900) return PLANS.find((p) => p.id === "freelancer")!;
+
+    return PLANS[0];
+  }, [activeSubscription]);
 
   const currentPlan = getCurrentPlan();
-  // useEffect(() => {
-  //   if (activeOrg?.id && currentPlan) {
-  //     fetch("/api/subscription/sync", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ planId: currentPlan }),
-  //     }).catch((err) => console.error("Failed to sync plan:", err));
-  //   }
-  // }, [activeOrg?.id, currentPlan]);
+
+  const canAccess = {
+    createCaseStudy: (currentCount: number) => {
+      const limit = currentPlan.limits.caseStudies;
+      return limit === -1 || currentCount < limit;
+    },
+    uploadVideo: (durationMinutes: number) => {
+      const limit = currentPlan.limits.videoLength;
+      return limit === -1 || durationMinutes <= limit;
+    },
+    useStorage: (usedMB: number) => {
+      const limit = currentPlan.limits.storage;
+      return limit === -1 || usedMB < limit;
+    },
+    hasFeature: (feature: keyof Plan["limits"]) => {
+      const limit = currentPlan.limits[feature];
+      return limit === -1 || limit > 0;
+    },
+  };
+
   return (
     <SubscriptionContext.Provider
       value={{
@@ -83,7 +136,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         activeSubscription,
         customerState,
         isLoading,
+        isInitializing,
+        error,
         refresh: fetchSubscription,
+        canAccess,
       }}
     >
       {children}
@@ -91,48 +147,22 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Custom hook to use subscription data
 export function useSubscription() {
   const context = useContext(SubscriptionContext);
-
   if (context === undefined) {
     throw new Error(
       "useSubscription must be used within a SubscriptionProvider"
     );
   }
-
   return context;
 }
 
-// Helper hook to get current plan details
 export function useCurrentPlan() {
-  const { currentPlan } = useSubscription();
-  return PLANS.find((p) => p.id === currentPlan) || PLANS[0];
+  const { currentPlan, isInitializing } = useSubscription();
+  return { plan: currentPlan, isLoading: isInitializing };
 }
 
-// Helper hook to check if user can access a feature
 export function useCanAccess() {
-  const { currentPlan } = useSubscription();
-  const plan = PLANS.find((p) => p.id === currentPlan);
-
-  return {
-    canCreateCaseStudy: (currentCount: number) => {
-      if (!plan) return false;
-      return currentCount < plan.limits.caseStudies;
-    },
-    canUploadVideo: (durationMinutes: number) => {
-      if (!plan) return false;
-      return durationMinutes <= plan.limits.videoLength;
-    },
-    canUseStorage: (usedMB: number) => {
-      if (!plan) return false;
-      return usedMB < plan.limits.storage;
-    },
-    hasFeature: (feature: keyof typeof plan.limits) => {
-      if (!plan) return false;
-      const limit = plan.limits[feature];
-      return limit === -1 || limit > 0;
-    },
-    limits: plan?.limits || PLANS[0].limits,
-  };
+  const { canAccess } = useSubscription();
+  return canAccess;
 }
