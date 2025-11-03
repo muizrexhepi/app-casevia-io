@@ -8,13 +8,27 @@ import {
   AlertCircle,
   FileText,
   Sparkles,
-  Send,
   ArrowLeft,
   RefreshCw,
   Upload as UploadIcon,
+  MoreVertical,
+  Download,
+  Trash2,
+  Eye,
+  Calendar,
+  HardDrive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 interface ProjectStatusViewProps {
   project: any;
@@ -67,58 +81,65 @@ export function ProjectStatusView({
     }, 3000);
 
     return () => clearInterval(pollInterval);
-  }, [project.id, project.status]);
+  }, [project.id, project.status, router]);
 
   const getStatusInfo = () => {
     switch (project.status) {
       case "uploading":
         return {
-          icon: <Clock className="w-8 h-8 text-blue-600 animate-spin" />,
-          title: "Uploading file...",
+          icon: <Clock className="w-12 h-12 text-blue-600" />,
+          title: "Uploading file",
           description: "Securely uploading your file to cloud storage",
           progress: 25,
           color: "blue",
+          badge: "Uploading",
         };
       case "transcribing":
         return {
-          icon: <FileText className="w-8 h-8 text-purple-600 animate-pulse" />,
-          title: "Transcribing audio...",
+          icon: <FileText className="w-12 h-12 text-purple-600" />,
+          title: "Transcribing audio",
           description: "Converting speech to text with speaker detection",
           progress: 50,
           color: "purple",
+          badge: "Transcribing",
         };
       case "analyzing":
         return {
-          icon: <Sparkles className="w-8 h-8 text-indigo-600 animate-pulse" />,
-          title: "Analyzing with AI...",
+          icon: <Sparkles className="w-12 h-12 text-indigo-600" />,
+          title: "Analyzing with AI",
           description: "Extracting insights and generating your case study",
           progress: 75,
           color: "indigo",
+          badge: "Analyzing",
         };
       case "ready":
         return {
-          icon: <CheckCircle2 className="w-8 h-8 text-green-600" />,
-          title: "Ready to review!",
-          description: "Your case study has been generated",
+          icon: <CheckCircle2 className="w-12 h-12 text-green-600" />,
+          title: "Case study ready",
+          description:
+            "Your case study has been generated and is ready to review",
           progress: 100,
           color: "green",
+          badge: "Ready",
         };
       case "failed":
         return {
-          icon: <AlertCircle className="w-8 h-8 text-red-600" />,
+          icon: <AlertCircle className="w-12 h-12 text-red-600" />,
           title: "Processing failed",
           description:
             project.errorMessage || "Something went wrong. Please try again.",
           progress: 0,
           color: "red",
+          badge: "Failed",
         };
       default:
         return {
-          icon: <Clock className="w-8 h-8 text-gray-400" />,
-          title: "Processing...",
+          icon: <Clock className="w-12 h-12 text-muted-foreground" />,
+          title: "Processing",
           description: "Your file is being processed",
           progress: 0,
           color: "gray",
+          badge: "Processing",
         };
     }
   };
@@ -139,7 +160,7 @@ export function ProjectStatusView({
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("en-US", {
-      month: "long",
+      month: "short",
       day: "numeric",
       year: "numeric",
       hour: "2-digit",
@@ -167,111 +188,162 @@ export function ProjectStatusView({
     }
   };
 
-  const handleViewCaseStudy = () => {
-    router.push(`/dashboard/projects/${project.id}/case-study`);
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => router.push("/dashboard/projects")}
-            className="text-sm text-gray-600 hover:text-gray-900 mb-4 flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Projects
-          </button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {project.title}
-          </h1>
-          <p className="text-gray-600 text-sm">
-            Created {formatDate(project.createdAt)}
-          </p>
+    <div className="container max-w-6xl py-8 mx-auto">
+      {/* Header */}
+      <div className="mb-8">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push("/dashboard/projects")}
+          className="mb-6"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Projects
+        </Button>
+
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold text-foreground">
+                {project.title}
+              </h1>
+              <StatusBadge status={project.status} label={statusInfo.badge} />
+            </div>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-4 h-4" />
+                <span>{formatDate(project.createdAt)}</span>
+              </div>
+              {isPolling && (
+                <div className="flex items-center gap-1.5 text-blue-600">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Auto-updating</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <Download className="w-4 h-4 mr-2" />
+                Download file
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-red-600">
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete project
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+      </div>
 
-        {/* Status Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-6">
-          <div className="flex items-start gap-6">
-            <div className="shrink-0">{statusInfo.icon}</div>
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Status Card */}
+          <div className="rounded-xl border bg-card p-8">
+            <div className="flex items-start gap-6 mb-8">
+              <div className="shrink-0 p-3 rounded-xl bg-muted">
+                {statusInfo.icon}
+              </div>
 
-            <div className="flex-1">
-              <div className="flex items-start justify-between mb-2">
-                <h2 className="text-xl font-semibold text-gray-900">
+              <div className="flex-1">
+                <h2 className="text-2xl font-semibold text-foreground mb-2">
                   {statusInfo.title}
                 </h2>
-                {isPolling && (
-                  <span className="flex items-center gap-2 text-sm text-gray-500">
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    Updating...
-                  </span>
-                )}
+                <p className="text-muted-foreground">
+                  {statusInfo.description}
+                </p>
               </div>
-              <p className="text-gray-600 mb-6">{statusInfo.description}</p>
+            </div>
 
-              {/* Progress Bar */}
-              {project.status !== "failed" && (
-                <div className="mb-6">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-500">Progress</span>
-                    <span className="font-medium text-gray-900">
+            {/* Progress Section */}
+            {project.status !== "failed" && (
+              <div className="space-y-6">
+                {/* Progress Bar */}
+                <div>
+                  <div className="flex justify-between text-sm mb-3">
+                    <span className="font-medium text-foreground">
+                      Progress
+                    </span>
+                    <span className="font-semibold text-foreground">
                       {statusInfo.progress}%
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
                     <div
-                      className={`h-3 rounded-full transition-all duration-500 ${
-                        statusInfo.color === "blue"
-                          ? "bg-gradient-to-r from-blue-500 to-blue-600"
-                          : statusInfo.color === "purple"
-                          ? "bg-gradient-to-r from-purple-500 to-purple-600"
-                          : statusInfo.color === "indigo"
-                          ? "bg-gradient-to-r from-indigo-500 to-indigo-600"
-                          : "bg-gradient-to-r from-green-500 to-green-600"
-                      }`}
+                      className={cn(
+                        "h-2.5 rounded-full transition-all duration-500",
+                        project.status === "uploading" && "bg-blue-600",
+                        project.status === "transcribing" && "bg-purple-600",
+                        project.status === "analyzing" && "bg-indigo-600",
+                        project.status === "ready" && "bg-green-600"
+                      )}
                       style={{ width: `${statusInfo.progress}%` }}
                     />
                   </div>
                 </div>
-              )}
 
-              {/* Processing Steps */}
-              {project.status !== "failed" && project.status !== "ready" && (
-                <div className="space-y-3">
-                  <ProcessingStep
-                    icon={<UploadIcon className="w-5 h-5" />}
-                    label="Upload file"
-                    isActive={project.status === "uploading"}
-                    isComplete={["transcribing", "analyzing", "ready"].includes(
-                      project.status
-                    )}
-                  />
-                  <ProcessingStep
-                    icon={<FileText className="w-5 h-5" />}
-                    label="Transcribe audio"
-                    isActive={project.status === "transcribing"}
-                    isComplete={["analyzing", "ready"].includes(project.status)}
-                  />
-                  <ProcessingStep
-                    icon={<Sparkles className="w-5 h-5" />}
-                    label="AI analysis"
-                    isActive={project.status === "analyzing"}
-                    isComplete={project.status === "ready"}
-                  />
-                  <ProcessingStep
-                    icon={<Send className="w-5 h-5" />}
-                    label="Generate case study"
-                    isActive={false}
-                    isComplete={project.status === "ready"}
-                  />
-                </div>
-              )}
+                {/* Processing Steps */}
+                {project.status !== "ready" && (
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                    <ProcessingStep
+                      icon={<UploadIcon className="w-5 h-5" />}
+                      label="Upload"
+                      isActive={project.status === "uploading"}
+                      isComplete={[
+                        "transcribing",
+                        "analyzing",
+                        "ready",
+                      ].includes(project.status)}
+                    />
+                    <ProcessingStep
+                      icon={<FileText className="w-5 h-5" />}
+                      label="Transcribe"
+                      isActive={project.status === "transcribing"}
+                      isComplete={["analyzing", "ready"].includes(
+                        project.status
+                      )}
+                    />
+                    <ProcessingStep
+                      icon={<Sparkles className="w-5 h-5" />}
+                      label="Analyze"
+                      isActive={project.status === "analyzing"}
+                      isComplete={project.status === "ready"}
+                    />
+                    <ProcessingStep
+                      icon={<CheckCircle2 className="w-5 h-5" />}
+                      label="Complete"
+                      isActive={false}
+                      isComplete={project.status === "ready"}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
-              {/* Ready State */}
+            {/* Action Buttons */}
+            <div className="flex gap-3 mt-8 pt-6 border-t">
               {project.status === "ready" && (
-                <div className="flex gap-3 mt-6">
-                  <Button onClick={handleViewCaseStudy} size="lg">
+                <>
+                  <Button
+                    onClick={() =>
+                      router.push(
+                        `/dashboard/projects/${project.id}/case-study`
+                      )
+                    }
+                    size="lg"
+                    className="flex-1"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
                     Review Case Study
                   </Button>
                   {project.transcript && (
@@ -284,69 +356,108 @@ export function ProjectStatusView({
                         )
                       }
                     >
-                      View Transcript
+                      <FileText className="w-4 h-4 mr-2" />
+                      Transcript
                     </Button>
                   )}
-                </div>
+                </>
               )}
 
-              {/* Failed State */}
               {project.status === "failed" && (
-                <div className="flex gap-3 mt-6">
-                  <Button onClick={handleRetry}>Retry Processing</Button>
+                <>
+                  <Button onClick={handleRetry} className="flex-1">
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Retry Processing
+                  </Button>
                   <Button
                     variant="outline"
                     onClick={() => router.push("/dashboard/projects/new")}
                   >
-                    Upload New File
+                    <UploadIcon className="w-4 h-4 mr-2" />
+                    New Upload
                   </Button>
-                </div>
+                </>
               )}
             </div>
           </div>
+
+          {/* Estimated Time */}
+          {(project.status === "transcribing" ||
+            project.status === "analyzing") && (
+            <div className="rounded-lg border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-5">
+              <div className="flex gap-3">
+                <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                    Estimated time remaining: 2-5 minutes
+                  </p>
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    You can safely close this page. We'll email you when it's
+                    ready.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* File Details */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h3 className="font-semibold text-gray-900 mb-4">File Details</h3>
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* File Details */}
+          <div className="rounded-xl border bg-card p-6">
+            <h3 className="font-semibold text-foreground mb-4">File Details</h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">File Name</p>
+                <p className="text-sm font-medium text-foreground break-all">
+                  {project.fileName}
+                </p>
+              </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            <div>
-              <p className="text-xs text-gray-500 mb-1">File Name</p>
-              <p className="text-sm font-medium text-gray-900 break-all">
-                {project.fileName}
-              </p>
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Duration</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {formatDuration(project.durationSeconds)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    File Size
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {formatFileSize(project.fileSize)}
+                  </p>
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Duration</p>
-              <p className="text-sm font-medium text-gray-900">
-                {formatDuration(project.durationSeconds)}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-500 mb-1">File Size</p>
-              <p className="text-sm font-medium text-gray-900">
-                {formatFileSize(project.fileSize)}
-              </p>
-            </div>
+          {/* Processing Info */}
+          <div className="rounded-xl border bg-muted/50 p-6">
+            <h3 className="font-semibold text-foreground mb-3">
+              What happens next?
+            </h3>
+            <ul className="space-y-2.5 text-sm text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                <span>AI transcription with speaker detection</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                <span>Smart analysis of key insights</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                <span>Professional case study generation</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                <span>Social media post drafts</span>
+              </li>
+            </ul>
           </div>
         </div>
-
-        {/* Estimated Time */}
-        {(project.status === "transcribing" ||
-          project.status === "analyzing") && (
-          <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
-            <p className="text-sm text-blue-900">
-              <span className="font-semibold">Estimated time remaining:</span>{" "}
-              2-5 minutes
-            </p>
-            <p className="text-xs text-blue-700 mt-1">
-              You can safely close this page. We'll email you when it's ready.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -365,16 +476,56 @@ function ProcessingStep({
 }) {
   return (
     <div
-      className={`flex items-center gap-3 ${
-        isActive
-          ? "text-blue-600"
-          : isComplete
-          ? "text-green-600"
-          : "text-gray-300"
-      }`}
+      className={cn(
+        "flex items-center gap-2.5 p-3 rounded-lg border transition-all",
+        isActive &&
+          "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800",
+        isComplete &&
+          "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800",
+        !isActive && !isComplete && "bg-muted/50 border-transparent"
+      )}
     >
-      {isComplete ? <CheckCircle2 className="w-5 h-5" /> : icon}
-      <span className="text-sm font-medium">{label}</span>
+      <div
+        className={cn(
+          "transition-colors",
+          isActive && "text-blue-600 dark:text-blue-400",
+          isComplete && "text-green-600 dark:text-green-400",
+          !isActive && !isComplete && "text-muted-foreground"
+        )}
+      >
+        {isComplete ? <CheckCircle2 className="w-5 h-5" /> : icon}
+      </div>
+      <span
+        className={cn(
+          "text-sm font-medium",
+          isActive && "text-blue-900 dark:text-blue-100",
+          isComplete && "text-green-900 dark:text-green-100",
+          !isActive && !isComplete && "text-muted-foreground"
+        )}
+      >
+        {label}
+      </span>
     </div>
+  );
+}
+
+function StatusBadge({ status, label }: { status: string; label: string }) {
+  const variants = {
+    uploading: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
+    transcribing:
+      "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400",
+    analyzing:
+      "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400",
+    ready: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400",
+    failed: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
+  };
+
+  return (
+    <Badge
+      variant="secondary"
+      className={cn("text-xs", variants[status as keyof typeof variants])}
+    >
+      {label}
+    </Badge>
   );
 }

@@ -50,7 +50,7 @@ export function TeamSwitcher({ organization }: { organization: any }) {
                   {organization.name}
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {currentPlan.name}
+                  {currentPlan.plan.name}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4 opacity-70" />
@@ -81,7 +81,7 @@ export function TeamSwitcher({ organization }: { organization: any }) {
                     {organization.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {currentPlan.name}
+                    {currentPlan.plan.name}
                   </span>
                 </div>
               </div>
