@@ -1,8 +1,6 @@
-// app/dashboard/case-studies/[id]/page.tsx
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/drizzle";
 import { caseStudy } from "@/lib/auth/schema";
@@ -12,29 +10,27 @@ import {
   Building,
   Calendar,
   Check,
-  ChevronLeft,
+  ArrowLeft,
   Eye,
-  Link as LinkIcon,
+  ExternalLink,
   Quote,
   Target,
+  TrendingUp,
+  Globe,
+  Edit,
+  Share2,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PublishToggle } from "@/components/case-studies/publish-toggle";
+import { Separator } from "@/components/ui/separator";
 
 export default async function CaseStudyDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  // Get authenticated session
   const headersList = await headers();
   const session = await auth.api.getSession({
     headers: headersList,
@@ -46,65 +42,129 @@ export default async function CaseStudyDetailPage({
 
   const organizationId = session.session.activeOrganizationId;
 
-  // Fetch the specific case study, ensuring it belongs to the user's org
   const [data] = await db
     .select()
     .from(caseStudy)
     .where(
       and(
-        eq(caseStudy.id, params.id), // This line was fine, the error was misleading
+        eq(caseStudy.id, params.id),
         eq(caseStudy.organizationId, organizationId)
       )
     );
 
-  // If no case study found (or doesn't belong to org), show 404
   if (!data) {
     notFound();
   }
 
-  // Safely parse JSONB fields
   const keyQuotes = safeParseJsonb(data.keyQuotes);
   const metrics = safeParseJsonb(data.metrics);
   const keyTakeaways = safeParseJsonb(data.keyTakeaways);
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-8 gap-4">
-          <div>
-            <Link
-              href="/dashboard/case-studies"
-              className="flex items-center text-sm text-muted-foreground hover:text-foreground mb-2"
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Back to Case Studies
-            </Link>
-            <h1 className="text-3xl font-bold text-foreground mb-1">
+    <div className="container max-w-7xl py-8 mx-auto">
+      {/* Header */}
+      <div className="mb-8">
+        <Button variant="ghost" size="sm" asChild className="mb-6">
+          <Link href="/dashboard/case-studies">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Case Studies
+          </Link>
+        </Button>
+
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-3">
+              <Badge variant="secondary">
+                <BookText className="w-3 h-3 mr-1" />
+                Case Study
+              </Badge>
+              {data.published ? (
+                <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
+                  <Globe className="w-3 h-3 mr-1" />
+                  Published
+                </Badge>
+              ) : (
+                <Badge variant="outline">Draft</Badge>
+              )}
+            </div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               {data.title}
             </h1>
-            <p className="text-lg text-muted-foreground">{data.clientName}</p>
+            {data.clientName && (
+              <p className="text-lg text-muted-foreground">{data.clientName}</p>
+            )}
           </div>
-          {data.published && data.publicSlug && (
-            <Button asChild variant="outline" className="shrink-0">
-              <Link href={`/${data.publicSlug}`} target="_blank">
-                <Eye className="w-4 h-4 mr-2" />
-                View Live Page
+
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href={`/dashboard/projects/${data.projectId}/case-study`}>
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
               </Link>
             </Button>
-          )}
+            {data.published && data.publicSlug && (
+              <Button asChild>
+                <Link href={`/${data.publicSlug}`} target="_blank">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Live
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
+      </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left Column (Content) */}
-          <div className="md:col-span-2 space-y-6">
-            <CaseStudySection title="Summary" content={data.summary} />
-            <CaseStudySection title="Challenge" content={data.challenge} />
-            <CaseStudySection title="Solution" content={data.solution} />
-            <CaseStudySection title="Results" content={data.results} />
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-foreground leading-relaxed">{data.summary}</p>
+            </CardContent>
+          </Card>
 
-            {/* Key Quotes */}
+          {/* Challenge */}
+          <Card>
+            <CardHeader>
+              <CardTitle>The Challenge</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                {data.challenge}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Solution */}
+          <Card>
+            <CardHeader>
+              <CardTitle>The Solution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                {data.solution}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Results */}
+          <Card>
+            <CardHeader>
+              <CardTitle>The Results</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                {data.results}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Key Quotes */}
+          {keyQuotes.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -113,84 +173,91 @@ export default async function CaseStudyDetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {keyQuotes.length > 0 ? (
-                  keyQuotes.map((quote: string, i: number) => (
-                    <blockquote
-                      key={i}
-                      className="border-l-4 border-border pl-4 italic text-muted-foreground"
-                    >
-                      {quote}
-                    </blockquote>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground">No key quotes found.</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Column (Sidebar) */}
-          <aside className="md:col-span-1 space-y-6 md:sticky md:top-6">
-            {/* Publish Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Publish Status</CardTitle>
-                <CardDescription>
-                  {data.published
-                    ? "Your case study is live."
-                    : "Your case study is a draft."}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <PublishToggle
-                  caseStudyId={data.id}
-                  isPublished={data.published}
-                />
-                {data.published && data.publicSlug && (
-                  <div className="mt-4">
-                    <label className="text-xs font-medium text-muted-foreground">
-                      Public URL
-                    </label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <LinkIcon className="w-4 h-4 text-muted-foreground" />
-                      <Link
-                        href={`/${data.publicSlug}`}
-                        target="_blank"
-                        className="text-sm text-blue-600 hover:underline truncate"
-                      >
-                        {`/${data.publicSlug}`}
-                      </Link>
-                    </div>
+                {keyQuotes.map((quote: string, i: number) => (
+                  <div key={i} className="border-l-4 border-primary pl-5 py-2">
+                    <p className="italic text-muted-foreground leading-relaxed">
+                      "{quote}"
+                    </p>
                   </div>
-                )}
+                ))}
               </CardContent>
             </Card>
+          )}
+        </div>
 
-            {/* Details Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <InfoRow
-                  icon={<Building className="w-4 h-4" />}
-                  label="Client Industry"
-                  value={data.clientIndustry}
-                />
-                <InfoRow
-                  icon={<Calendar className="w-4 h-4" />}
-                  label="Created"
-                  value={new Date(data.createdAt).toLocaleDateString()}
-                />
-                <InfoRow
-                  icon={<Eye className="w-4 h-4" />}
-                  label="Views"
-                  value={data.viewCount.toString()}
-                />
-              </CardContent>
-            </Card>
+        {/* Sidebar */}
+        <aside className="space-y-6">
+          {/* Publishing */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Publishing</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <PublishToggle
+                caseStudyId={data.id}
+                isPublished={data.published}
+              />
 
-            {/* Metrics Card */}
+              {data.published && data.publicSlug && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">
+                      Public URL
+                    </p>
+                    <Link
+                      href={`/${data.publicSlug}`}
+                      target="_blank"
+                      className="flex items-center gap-2 text-sm text-primary hover:underline break-all"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />/
+                      {data.publicSlug}
+                    </Link>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    asChild
+                  >
+                    <Link href={`/${data.publicSlug}`} target="_blank">
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Share
+                    </Link>
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <InfoRow
+                icon={<Building className="w-4 h-4" />}
+                label="Industry"
+                value={data.clientIndustry}
+              />
+              <Separator />
+              <InfoRow
+                icon={<Calendar className="w-4 h-4" />}
+                label="Created"
+                value={new Date(data.createdAt).toLocaleDateString()}
+              />
+              <Separator />
+              <InfoRow
+                icon={<Eye className="w-4 h-4" />}
+                label="Views"
+                value={data.viewCount.toLocaleString()}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Metrics */}
+          {metrics.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -199,78 +266,50 @@ export default async function CaseStudyDetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ul className="list-none space-y-2">
-                  {metrics.length > 0 ? (
-                    metrics.map((metric: { metric: string }, i: number) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-green-600 shrink-0 mt-1" />
-                        <span className="text-sm">{metric.metric}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      No metrics found.
-                    </p>
-                  )}
-                </ul>
+                <div className="space-y-3">
+                  {metrics.map((metric: { metric: string }, i: number) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-foreground">
+                        {metric.metric}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
+          )}
 
-            {/* Key Takeaways Card */}
+          {/* Key Takeaways */}
+          {keyTakeaways.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <BookText className="w-5 h-5" />
+                  <TrendingUp className="w-5 h-5" />
                   Key Takeaways
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ul className="list-disc pl-5 space-y-2">
-                  {keyTakeaways.length > 0 ? (
-                    keyTakeaways.map((takeaway: string, i: number) => (
-                      <li key={i} className="text-sm">
-                        {takeaway}
-                      </li>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      No takeaways found.
-                    </p>
-                  )}
+                <ul className="space-y-2">
+                  {keyTakeaways.map((takeaway: string, i: number) => (
+                    <li
+                      key={i}
+                      className="text-sm text-foreground flex items-start gap-2"
+                    >
+                      <span className="text-primary mt-1.5">•</span>
+                      <span>{takeaway}</span>
+                    </li>
+                  ))}
                 </ul>
               </CardContent>
             </Card>
-          </aside>
-        </div>
+          )}
+        </aside>
       </div>
     </div>
   );
 }
 
-// Helper component for displaying content sections
-function CaseStudySection({
-  title,
-  content,
-}: {
-  title: string;
-  content: string | null;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Use whitespace-pre-wrap to respect newlines in the content */}
-        <p className="text-foreground whitespace-pre-wrap">
-          {content || "N/A"}
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Helper component for detail rows
 function InfoRow({
   icon,
   label,
@@ -293,28 +332,18 @@ function InfoRow({
   );
 }
 
-/**
- * Safely parses a JSONB field that might be a string or already an object.
- * Returns an array, defaulting to an empty one on failure.
- */
 function safeParseJsonb(jsonb: any, defaultValue: any[] = []): any[] {
-  if (!jsonb) {
-    return defaultValue;
-  }
+  if (!jsonb) return defaultValue;
   if (typeof jsonb === "object" && jsonb !== null) {
-    // It's already parsed (Drizzle/pg-driver did its job)
     return Array.isArray(jsonb) ? jsonb : defaultValue;
   }
   if (typeof jsonb === "string") {
-    // It's a string, needs parsing
     try {
       const parsed = JSON.parse(jsonb);
       return Array.isArray(parsed) ? parsed : defaultValue;
-    } catch (e) {
-      // It's a malformed string (like "Their profit...")
+    } catch {
       return defaultValue;
     }
   }
-  // Not an object or string, return default
   return defaultValue;
 }

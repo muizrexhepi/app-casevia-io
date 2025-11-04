@@ -65,8 +65,8 @@ const formatFileSize = (bytes: number | null) => {
 const getFileIcon = (fileName: string | null) => {
   if (!fileName)
     return (
-      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-        <FileText className="w-5 h-5 text-gray-400" />
+      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+        <FileText className="w-5 h-5 text-muted-foreground" />
       </div>
     );
 
@@ -87,8 +87,8 @@ const getFileIcon = (fileName: string | null) => {
   }
 
   return (
-    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-      <FileText className="w-5 h-5 text-gray-400" />
+    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+      <FileText className="w-5 h-5 text-muted-foreground" />
     </div>
   );
 };
@@ -122,9 +122,9 @@ function UsageStats({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-8 mb-8">
+      <div className="bg-background rounded-xl border p-8 mb-8">
         <div className="flex items-center justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
       </div>
     );
@@ -142,7 +142,7 @@ function UsageStats({
   ).length;
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-8 mb-8">
+    <div className="bg-card rounded-xl border p-8 mb-8">
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
@@ -151,10 +151,12 @@ function UsageStats({
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-foreground">
                 {currentPlan.name} Plan
               </h3>
-              <p className="text-sm text-gray-500">Monthly usage overview</p>
+              <p className="text-sm text-muted-foreground">
+                Monthly usage overview
+              </p>
             </div>
           </div>
         </div>
@@ -169,16 +171,16 @@ function UsageStats({
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         {/* Case Studies Usage */}
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
+        <div className="bg-background rounded-lg border p-5">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
               <FileText className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Case Studies</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm text-muted-foreground">Case Studies</p>
+              <p className="text-2xl font-bold text-foreground">
                 {initialLimits?.caseStudiesUsed}
-                <span className="text-base font-normal text-gray-400">
+                <span className="text-base font-normal text-muted-foreground">
                   {" "}
                   / {currentPlan.limits.caseStudies}
                 </span>
@@ -186,7 +188,7 @@ function UsageStats({
             </div>
           </div>
           <div className="relative">
-            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
               <div
                 className={cn(
                   "h-2 rounded-full transition-all duration-500",
@@ -199,23 +201,23 @@ function UsageStats({
                 style={{ width: `${Math.min(usagePercentage, 100)}%` }}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-muted-foreground mt-2">
               {usagePercentage.toFixed(0)}% used
             </p>
           </div>
         </div>
 
         {/* Storage Usage */}
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
+        <div className="bg-background rounded-lg border p-5">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
               <Database className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Storage</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm text-muted-foreground">Storage</p>
+              <p className="text-2xl font-bold text-foreground">
                 {initialLimits?.storageUsedMb}
-                <span className="text-base font-normal text-gray-400">
+                <span className="text-base font-normal text-muted-foreground">
                   {" "}
                   / {currentPlan.limits.storage} MB
                 </span>
@@ -223,7 +225,7 @@ function UsageStats({
             </div>
           </div>
           <div className="relative">
-            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
               <div
                 className={cn(
                   "h-2 rounded-full transition-all duration-500",
@@ -236,21 +238,21 @@ function UsageStats({
                 style={{ width: `${Math.min(storagePercentage, 100)}%` }}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-muted-foreground mt-2">
               {storagePercentage.toFixed(0)}% used
             </p>
           </div>
         </div>
 
         {/* Team Info */}
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
+        <div className="bg-background rounded-lg border p-5">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
               <Users className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Team Seats</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm text-muted-foreground">Team Seats</p>
+              <p className="text-2xl font-bold text-foreground">
                 {currentPlan.limits.teamSeats === -1
                   ? "Unlimited"
                   : currentPlan.limits.teamSeats}
@@ -258,10 +260,10 @@ function UsageStats({
             </div>
           </div>
           <div className="space-y-1">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Max video: {currentPlan.limits.videoLength} min
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               {readyCount} ready • {processingCount} processing
             </p>
           </div>
@@ -279,29 +281,29 @@ function ProjectCard({ project }: { project: Project }) {
     <Link
       href={`/dashboard/projects/${project.id}`}
       className={cn(
-        "group block bg-white rounded-lg border border-gray-200 p-5",
+        "group block bg-card rounded-lg border p-5",
         "transition-all duration-200",
         "hover:shadow-lg hover:border-gray-300 hover:-translate-y-0.5"
       )}
     >
       <div className="flex items-center gap-4">
         {/* File Icon */}
-        <div className="flex-shrink-0">{getFileIcon(project.fileName)}</div>
+        <div className="shrink-0">{getFileIcon(project.fileName)}</div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4 mb-2">
-            <h3 className="text-base font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+            <h3 className="text-base font-semibold text-foreground truncate group-hover:text-primary transition-colors">
               {project.title}
             </h3>
             <ProjectStatusBadge status={project.status} />
           </div>
 
-          <p className="text-sm text-gray-500 truncate mb-3">
+          <p className="text-sm text-muted-foreground truncate mb-3">
             {project.fileName}
           </p>
 
-          <div className="flex items-center gap-5 text-xs text-gray-500">
+          <div className="flex items-center gap-5 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5" />
               <span>{formatDate(project.createdAt)}</span>
@@ -387,15 +389,15 @@ function ProjectStatusBadge({ status }: { status: string }) {
 
 function EmptyState() {
   return (
-    <div className="bg-white rounded-xl border-2 border-dashed border-gray-200 p-16 text-center">
+    <div className="bg-background rounded-xl border-2 border-dashed p-16 text-center">
       <div className="max-w-md mx-auto">
         <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
           <FileText className="w-8 h-8 text-blue-600" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+        <h3 className="text-xl font-semibold text-foreground mb-2">
           No projects yet
         </h3>
-        <p className="text-gray-500 mb-8 max-w-sm mx-auto">
+        <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
           Start by uploading your first customer interview to generate a
           professional case study
         </p>
