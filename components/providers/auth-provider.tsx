@@ -8,7 +8,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-// Optional: Auth guard for protected routes
 export function useAuthGuard() {
   const router = useRouter();
   const pathname = usePathname();

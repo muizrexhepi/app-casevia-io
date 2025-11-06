@@ -215,33 +215,35 @@ export function UploadForm({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => router.push("/dashboard/projects")}
-            className="text-sm text-gray-600 hover:text-gray-900 mb-4 flex items-center gap-2"
+            className="text-sm text-muted-foreground hover:text-foreground mb-4 flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Projects
           </button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Create New Case Study
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Upload your customer interview to generate a professional case study
           </p>
         </div>
 
         {/* Plan Limits Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="bg-card rounded-lg shadow-sm border p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">
+              <h3 className="text-sm font-semibold text-foreground">
                 Current Plan: {currentPlan.name}
               </h3>
-              <p className="text-xs text-gray-500 mt-1">Usage this month</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Usage this month
+              </p>
             </div>
             <button
               onClick={() => router.push("/settings/billing")}
@@ -254,12 +256,12 @@ export function UploadForm({
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Case Studies</span>
-                <span className="font-medium text-gray-900">
+                <span className="text-muted-foreground">Case Studies</span>
+                <span className="font-medium text-foreground">
                   {limits.caseStudiesUsed} / {currentPlan.limits.caseStudies}
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2">
                 <div
                   className={`h-2 rounded-full transition-all ${
                     usagePercentage >= 90
@@ -273,16 +275,20 @@ export function UploadForm({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+            <div className="grid grid-cols-2 gap-4 pt-2 border-t">
               <div>
-                <p className="text-xs text-gray-500">Max Video Length</p>
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-xs text-muted-foreground">
+                  Max Video Length
+                </p>
+                <p className="text-sm font-medium text-foreground">
                   {currentPlan.limits.videoLength} minutes
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">Storage Available</p>
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-xs text-muted-foreground">
+                  Storage Available
+                </p>
+                <p className="text-sm font-medium text-foreground">
                   {limits.storageUsedMb} / {currentPlan.limits.storage} MB
                 </p>
               </div>
@@ -291,7 +297,7 @@ export function UploadForm({
         </div>
 
         {/* Upload Area */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <div className="bg-card rounded-lg shadow-sm border p-8">
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -299,7 +305,7 @@ export function UploadForm({
             className={`relative border-2 border-dashed rounded-xl p-12 text-center transition-all ${
               isDragging
                 ? "border-blue-500 bg-blue-50"
-                : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+                : "bg-accent/50 hover:bg-accent/60"
             }`}
           >
             <input
@@ -313,29 +319,29 @@ export function UploadForm({
             {!file ? (
               <>
                 <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
                   Drop your file here or click to browse
                 </h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                   Supports MP4, MOV, AVI, MP3, WAV
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Max {currentPlan.limits.videoLength} minutes
                 </p>
               </>
             ) : (
               <div className="space-y-4">
-                <div className="inline-flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3">
+                <div className="inline-flex items-center gap-3 bg-card border rounded-lg px-4 py-3">
                   {file.type.startsWith("video/") ? (
                     <Film className="w-5 h-5 text-blue-600" />
                   ) : (
                     <FileAudio className="w-5 h-5 text-blue-600" />
                   )}
                   <div className="text-left">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-foreground">
                       {file.name}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {validation.sizeMB} MB • ~{validation.duration} minutes
                     </p>
                   </div>
@@ -345,7 +351,7 @@ export function UploadForm({
                 <button
                   onClick={() => setFile(null)}
                   disabled={uploading}
-                  className="text-sm text-gray-600 hover:text-gray-900 underline disabled:opacity-50"
+                  className="text-sm text-muted-foreground hover:text-foreground underline disabled:opacity-50"
                 >
                   Choose different file
                 </button>
@@ -360,7 +366,7 @@ export function UploadForm({
                   setFile(null);
                 }}
                 disabled={uploading}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-foreground disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -384,34 +390,38 @@ export function UploadForm({
 
         {/* Info Cards */}
         <div className="grid md:grid-cols-3 gap-4 mt-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-card rounded-lg border p-4">
             <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-3">
               <span className="text-xl">🎙️</span>
             </div>
-            <h4 className="font-semibold text-gray-900 mb-1">
+            <h4 className="font-semibold text-foreground mb-1">
               AI Transcription
             </h4>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-muted-foreground">
               Automatic speech-to-text with speaker detection
             </p>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-card rounded-lg border p-4">
             <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center mb-3">
               <span className="text-xl">✨</span>
             </div>
-            <h4 className="font-semibold text-gray-900 mb-1">Smart Analysis</h4>
-            <p className="text-xs text-gray-600">
+            <h4 className="font-semibold text-foreground mb-1">
+              Smart Analysis
+            </h4>
+            <p className="text-xs text-muted-foreground">
               Extract key insights and powerful quotes
             </p>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-card rounded-lg border p-4">
             <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mb-3">
               <span className="text-xl">📄</span>
             </div>
-            <h4 className="font-semibold text-gray-900 mb-1">Ready to Share</h4>
-            <p className="text-xs text-gray-600">
+            <h4 className="font-semibold text-foreground mb-1">
+              Ready to Share
+            </h4>
+            <p className="text-xs text-muted-foreground">
               Publish online or export as PDF/Markdown
             </p>
           </div>

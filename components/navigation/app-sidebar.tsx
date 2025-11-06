@@ -29,15 +29,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   const navMain = [
-    { title: "Dashboard", url: "/dashboard", icon: SquareTerminal },
-    { title: "Case Studies", url: "/dashboard/case-studies", icon: BookOpen },
     { title: "Projects", url: "/dashboard/projects", icon: Bot },
+    { title: "Case Studies", url: "/dashboard/case-studies", icon: BookOpen },
     { title: "Analytics", url: "/dashboard/analytics", icon: PieChart },
     { title: "Library", url: "/dashboard/library", icon: Frame },
   ];
 
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" {...props} className="border-none">
       <SidebarHeader>
         <TeamSwitcher organization={activeOrg?.[0]} />
       </SidebarHeader>

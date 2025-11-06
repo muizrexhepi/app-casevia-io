@@ -7,7 +7,8 @@ import { eq, and } from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  // 1. Change the type definition to be a Promise
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Authenticate user
@@ -18,7 +19,13 @@ export async function GET(
     }
 
     const organizationId = session.session.activeOrganizationId;
-    const projectId = params.id;
+
+    // 2. Await params before destructuring or accessing properties
+    const awaitedParams = await params;
+    const projectId = awaitedParams.id; // Corrected usage
+
+    // Alternative: Destructure directly after awaiting
+    // const { id: projectId } = await params;
 
     // Fetch project
     const [projectData] = await db

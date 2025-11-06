@@ -36,7 +36,7 @@ export default function SignInPage() {
 
         if (orgs && orgs.length > 0) {
           // User has organizations, go to dashboard
-          router.push("/dashboard");
+          router.push("/dashboard/projects");
         } else {
           // User needs to complete onboarding
           router.push("/onboarding");

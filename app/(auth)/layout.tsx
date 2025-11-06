@@ -18,7 +18,7 @@ export default async function AuthLayout({
     });
 
     if (organizations && organizations.length > 0) {
-      redirect("/dashboard");
+      redirect("/dashboard/projects");
     }
 
     redirect("/onboarding");

@@ -17,10 +17,10 @@ export function UploadFormWrapper({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center space-y-3">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto" />
-          <p className="text-sm text-gray-500">Loading...</p>
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground mx-auto" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
     );

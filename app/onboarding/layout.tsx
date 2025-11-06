@@ -22,7 +22,7 @@ export default async function OnboardingLayout({
   });
 
   if (organizations && organizations.length > 0) {
-    redirect("/dashboard");
+    redirect("/dashboard/projects");
   }
 
   return <>{children}</>;

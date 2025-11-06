@@ -1,12 +1,19 @@
 // app/api/projects/[id]/analyze/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/drizzle";
-import { project, caseStudy, socialPost, user } from "@/lib/auth/schema";
+import {
+  project,
+  caseStudy,
+  socialPost,
+  user,
+  planLimits,
+} from "@/lib/auth/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import OpenAI from "openai";
 import { Resend } from "resend";
 import CaseStudyReadyEmail from "@/components/emails/case-study-ready";
+import { PLANS } from "@/lib/constants/plans";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -41,7 +48,18 @@ export async function POST(
       );
     }
 
-    // 2. Format transcript with speaker labels
+    // 2. Get organization's plan to determine social post limit
+    const [limits] = await db
+      .select()
+      .from(planLimits)
+      .where(eq(planLimits.organizationId, projectData.organizationId));
+
+    const plan = PLANS.find((p) => p.id === limits?.planId);
+    const socialPostLimit = plan?.limits.socialPosts || 0;
+
+    console.log(`Plan: ${plan?.name}, Social Post Limit: ${socialPostLimit}`);
+
+    // 3. Format transcript with speaker labels
     const formattedTranscript = formatTranscriptWithSpeakers(
       projectData.transcript,
       projectData.speakerLabels
@@ -49,13 +67,19 @@ export async function POST(
 
     console.log("Calling AI for analysis...");
 
-    // 3. Call AI
+    // 4. Determine what to generate based on plan
+    const shouldGenerateSocial = socialPostLimit > 0 || socialPostLimit === -1;
+    const systemPrompt = shouldGenerateSocial
+      ? CASE_STUDY_WITH_SOCIAL_PROMPT
+      : CASE_STUDY_BASIC_PROMPT;
+
+    // 5. Call AI
     const completion = await openai.chat.completions.create({
       model: "deepseek-chat",
       messages: [
         {
           role: "system",
-          content: CASE_STUDY_SYSTEM_PROMPT,
+          content: systemPrompt,
         },
         {
           role: "user",
@@ -72,10 +96,10 @@ export async function POST(
 
     console.log("AI analysis complete, saving to database...");
 
-    // 4. Generate SEO-friendly slug
+    // 6. Generate SEO-friendly slug
     const slug = generateSlug(analysisResult.title);
 
-    // 5. Create case study record
+    // 7. Create case study record
     const caseStudyId = nanoid();
     await db.insert(caseStudy).values({
       id: caseStudyId,
@@ -97,31 +121,59 @@ export async function POST(
       published: false,
     });
 
-    // 6. Create social posts
-    if (analysisResult.linkedin_post_draft) {
-      await db.insert(socialPost).values({
-        id: nanoid(),
-        caseStudyId,
-        platform: "linkedin",
-        content: analysisResult.linkedin_post_draft,
-        status: "draft",
-      });
+    // 8. Create social posts based on plan limits
+    if (shouldGenerateSocial) {
+      const postsToCreate = [];
+
+      // LinkedIn post (if in response)
+      if (analysisResult.linkedin_post_draft) {
+        postsToCreate.push({
+          id: nanoid(),
+          caseStudyId,
+          platform: "linkedin",
+          content: analysisResult.linkedin_post_draft,
+          status: "draft",
+        });
+      }
+
+      // X thread (if in response)
+      if (
+        analysisResult.x_thread_draft &&
+        Array.isArray(analysisResult.x_thread_draft)
+      ) {
+        postsToCreate.push({
+          id: nanoid(),
+          caseStudyId,
+          platform: "x",
+          content: JSON.stringify(analysisResult.x_thread_draft),
+          status: "draft",
+        });
+      }
+
+      // Respect the plan limit
+      let postsToInsert = postsToCreate;
+      if (socialPostLimit !== -1) {
+        postsToInsert = postsToCreate.slice(0, socialPostLimit);
+      }
+
+      if (postsToInsert.length > 0) {
+        await db.insert(socialPost).values(postsToInsert);
+        console.log(`Created ${postsToInsert.length} social posts`);
+      }
+
+      // Increment social posts usage
+      await db
+        .update(planLimits)
+        .set({
+          socialPostsUsed: limits.socialPostsUsed + postsToInsert.length,
+          updatedAt: new Date(),
+        })
+        .where(eq(planLimits.organizationId, projectData.organizationId));
+    } else {
+      console.log("Social posts not available for this plan");
     }
 
-    if (
-      analysisResult.x_thread_draft &&
-      Array.isArray(analysisResult.x_thread_draft)
-    ) {
-      await db.insert(socialPost).values({
-        id: nanoid(),
-        caseStudyId,
-        platform: "x",
-        content: JSON.stringify(analysisResult.x_thread_draft),
-        status: "draft",
-      });
-    }
-
-    // 7. Update project status
+    // 9. Update project status
     await db
       .update(project)
       .set({
@@ -132,7 +184,7 @@ export async function POST(
 
     console.log("Case study created, sending email notification...");
 
-    // 8. 📧 SEND EMAIL NOTIFICATION
+    // 10. 📧 SEND EMAIL NOTIFICATION
     try {
       // Get user email
       const [userData] = await db
@@ -220,7 +272,8 @@ function generateSlug(title: string): string {
     .substring(0, 60);
 }
 
-const CASE_STUDY_SYSTEM_PROMPT = `You are an elite B2B case study writer with 15+ years creating high-converting customer success stories for SaaS, agencies, and professional services.
+// Basic prompt without social posts (for free plan)
+const CASE_STUDY_BASIC_PROMPT = `You are an elite B2B case study writer with 15+ years creating high-converting customer success stories for SaaS, agencies, and professional services.
 
 Your task: Analyze customer interview transcripts and extract key information to create a professional, data-driven case study.
 
@@ -306,7 +359,25 @@ Return a JSON object with this EXACT structure:
   - '60% Cost Reduction: Food Manufacturing Case Study'
   - 'SaaS Lead Gen: How Acme 3X'd Pipeline in 90 Days'",
   
-  "seo_description": "Compelling meta description for Google. Formula: 'Discover how [Client] achieved [result] using [solution]. Includes [key metric] and lessons learned.' Keep 140-155 characters.",
+  "seo_description": "Compelling meta description for Google. Formula: 'Discover how [Client] achieved [result] using [solution]. Includes [key metric] and lessons learned.' Keep 140-155 characters."
+}
+
+CRITICAL RULES:
+1. NEVER fabricate metrics, quotes, or data not in the transcript
+2. If specific numbers aren't mentioned, focus on qualitative improvements
+3. Extract quotes EXACTLY as spoken - word-for-word, no modifications
+4. Only quote the CUSTOMER (usually SPEAKER B), never the interviewer
+5. Focus on business outcomes and transformation, not just features
+6. Keep narratives compelling but 100% truthful to the transcript
+7. If critical info is missing, use null or provide general descriptions
+8. Maintain professional B2B tone throughout
+
+Return ONLY valid JSON. No markdown, no additional text.`;
+
+// Full prompt with social posts (for paid plans)
+const CASE_STUDY_WITH_SOCIAL_PROMPT = CASE_STUDY_BASIC_PROMPT.replace(
+  '"seo_description": "Compelling meta description for Google. Formula: \'Discover how [Client] achieved [result] using [solution]. Includes [key metric] and lessons learned.\' Keep 140-155 characters."',
+  `"seo_description": "Compelling meta description for Google. Formula: 'Discover how [Client] achieved [result] using [solution]. Includes [key metric] and lessons learned.' Keep 140-155 characters.",
   
   "linkedin_post_draft": "Write a 3-4 paragraph LinkedIn post from the AGENCY'S perspective announcing this success. Structure:
 
@@ -330,30 +401,5 @@ Tone: Professional but conversational. Use emojis sparingly (2-3 max). Avoid gen
     "Tweet 4 (Results): Share 2-3 specific outcomes. Use numbers when available. Under 280 chars.",
     
     "Tweet 5 (CTA): Call to action with value proposition. Example: 'Want similar results for your business? Read the full case study → [link placeholder]' Under 280 chars."
-  ]
-}
-
-CRITICAL RULES:
-1. NEVER fabricate metrics, quotes, or data not in the transcript
-2. If specific numbers aren't mentioned, focus on qualitative improvements
-3. Extract quotes EXACTLY as spoken - word-for-word, no modifications
-4. Only quote the CUSTOMER (usually SPEAKER B), never the interviewer
-5. Focus on business outcomes and transformation, not just features
-6. Keep narratives compelling but 100% truthful to the transcript
-7. If critical info is missing, use null or provide general descriptions
-8. Maintain professional B2B tone throughout
-
-QUOTE GUIDELINES:
-- Only include quotes that are clear, complete thoughts
-- Remove filler words like "um", "uh", "like" for readability
-- Keep the speaker's authentic voice and emotion
-- Quotes should validate claims, show emotion, or demonstrate impact
-
-METRICS GUIDELINES:
-- Percentage changes: "40% increase", "60% reduction"
-- Time savings: "Saved 10 hours per week", "Cut onboarding time by 50%"
-- Cost impact: "Reduced costs by $50K annually", "ROI of 300%"
-- Multipliers: "3x lead generation", "5x faster processing"
-- If no numbers, use: "Significantly improved", "Dramatically reduced", "Substantially increased"
-
-Return ONLY valid JSON. No markdown, no additional text.`;
+  ]`
+);

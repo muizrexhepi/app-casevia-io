@@ -1,3 +1,5 @@
+// NavHeader.tsx
+
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -13,6 +15,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { ChevronRight } from "lucide-react";
+import React from "react";
 
 export function NavHeader() {
   const pathname = usePathname();
@@ -55,6 +58,7 @@ export function NavHeader() {
               <BreadcrumbPage>Dashboard</BreadcrumbPage>
             </BreadcrumbItem>
           ) : (
+            // Map over segments to generate list items and separators
             breadcrumbSegments.map((segment, idx) => {
               const isLast = idx === breadcrumbSegments.length - 1;
               const actualIndex = segments.indexOf(segment);
@@ -62,22 +66,30 @@ export function NavHeader() {
               const formattedSegment = formatSegment(segment);
 
               return (
-                <BreadcrumbItem key={segment + idx}>
-                  {isLast ? (
-                    <BreadcrumbPage className="max-w-[200px] truncate">
-                      {formattedSegment}
-                    </BreadcrumbPage>
-                  ) : (
-                    <>
+                <React.Fragment key={segment + idx}>
+                  <BreadcrumbItem>
+                    {isLast ? (
+                      // Last item renders BreadcrumbPage inside the <li>
+                      <BreadcrumbPage className="max-w-[200px] truncate">
+                        {formattedSegment}
+                      </BreadcrumbPage>
+                    ) : (
+                      // Non-last item renders a Link inside the <li>
                       <BreadcrumbLink asChild>
                         <Link href={path}>{formattedSegment}</Link>
                       </BreadcrumbLink>
-                      <BreadcrumbSeparator>
-                        <ChevronRight className="h-4 w-4" />
-                      </BreadcrumbSeparator>
-                    </>
+                    )}
+                  </BreadcrumbItem>
+
+                  {/* CORRECT FIX: Conditionally render the Separator *outside*
+                    the BreadcrumbItem (<li>) and only if it's not the last item.
+                  */}
+                  {!isLast && (
+                    <BreadcrumbSeparator>
+                      <ChevronRight className="h-4 w-4" />
+                    </BreadcrumbSeparator>
                   )}
-                </BreadcrumbItem>
+                </React.Fragment>
               );
             })
           )}

@@ -158,7 +158,7 @@ export default function OnboardingPage() {
         }
 
         toast.success("Welcome to Casevia!");
-        router.push("/dashboard");
+        router.push("/dashboard/projects");
       } catch (err: any) {
         toast.error(err?.message || "Something went wrong. Please try again.");
       }

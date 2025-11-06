@@ -47,7 +47,7 @@ export function SettingsSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2 py-1.5">
           <Link
-            href="/dashboard"
+            href="/dashboard/projects"
             className="flex items-center justify-center rounded-md hover:bg-sidebar-accent p-2 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />

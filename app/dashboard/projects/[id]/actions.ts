@@ -1,4 +1,3 @@
-// app/dashboard/projects/[id]/case-study/actions.ts
 "use server";
 
 import { revalidatePath } from "next/cache";
