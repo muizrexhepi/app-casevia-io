@@ -14,9 +14,33 @@ import {
   TrendingUp,
   Database,
   Users,
+  MoreVertical,
+  Trash2,
+  ExternalLink,
 } from "lucide-react";
 import { useSubscription } from "../providers/subscription-provider";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { deleteProject } from "@/app/dashboard/projects/[id]/actions";
 
 type Project = {
   id: string;
@@ -135,20 +159,18 @@ function UsageStats({
   const storagePercentage =
     (initialLimits?.storageUsedMb / currentPlan.limits.storage) * 100;
 
-  // Count projects by status
   const readyCount = projects.filter((p) => p.status === "ready").length;
   const processingCount = projects.filter((p) =>
     ["uploading", "transcribing", "analyzing"].includes(p.status)
   ).length;
 
   return (
-    <div className="bg-card rounded-xl border p-8 mb-8">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+    <div className="bg-card rounded-xl border p-6 mb-6">
+      <div className="flex items-start justify-between mb-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-white" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-foreground">
@@ -168,91 +190,32 @@ function UsageStats({
         </Link>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {/* Case Studies Usage */}
-        <div className="bg-background rounded-lg border p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Case Studies</p>
-              <p className="text-2xl font-bold text-foreground">
-                {initialLimits?.caseStudiesUsed}
-                <span className="text-base font-normal text-muted-foreground">
-                  {" "}
-                  / {currentPlan.limits.caseStudies}
-                </span>
-              </p>
-            </div>
-          </div>
-          <div className="relative">
-            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className={cn(
-                  "h-2 rounded-full transition-all duration-500",
-                  usagePercentage >= 90
-                    ? "bg-red-500"
-                    : usagePercentage >= 70
-                    ? "bg-yellow-500"
-                    : "bg-blue-500"
-                )}
-                style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {usagePercentage.toFixed(0)}% used
-            </p>
-          </div>
-        </div>
-
-        {/* Storage Usage */}
-        <div className="bg-background rounded-lg border p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-              <Database className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Storage</p>
-              <p className="text-2xl font-bold text-foreground">
-                {initialLimits?.storageUsedMb}
-                <span className="text-base font-normal text-muted-foreground">
-                  {" "}
-                  / {currentPlan.limits.storage} MB
-                </span>
-              </p>
-            </div>
-          </div>
-          <div className="relative">
-            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className={cn(
-                  "h-2 rounded-full transition-all duration-500",
-                  storagePercentage >= 90
-                    ? "bg-red-500"
-                    : storagePercentage >= 70
-                    ? "bg-yellow-500"
-                    : "bg-purple-500"
-                )}
-                style={{ width: `${Math.min(storagePercentage, 100)}%` }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {storagePercentage.toFixed(0)}% used
-            </p>
-          </div>
-        </div>
-
-        {/* Team Info */}
-        <div className="bg-background rounded-lg border p-5">
-          <div className="flex items-center gap-3 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <UsageCard
+          icon={<FileText className="w-5 h-5 text-blue-600" />}
+          label="Case Studies"
+          used={initialLimits?.caseStudiesUsed}
+          total={currentPlan.limits.caseStudies}
+          percentage={usagePercentage}
+          color="blue"
+        />
+        <UsageCard
+          icon={<Database className="w-5 h-5 text-purple-600" />}
+          label="Storage"
+          used={initialLimits?.storageUsedMb}
+          total={currentPlan.limits.storage}
+          percentage={storagePercentage}
+          color="purple"
+          unit="MB"
+        />
+        <div className="bg-background rounded-lg border p-4">
+          <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
               <Users className="w-5 h-5 text-green-600" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Team Seats</p>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-xl font-bold text-foreground">
                 {currentPlan.limits.teamSeats === -1
                   ? "Unlimited"
                   : currentPlan.limits.teamSeats}
@@ -260,9 +223,6 @@ function UsageStats({
             </div>
           </div>
           <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">
-              Max video: {currentPlan.limits.videoLength} min
-            </p>
             <p className="text-xs text-muted-foreground">
               {readyCount} ready • {processingCount} processing
             </p>
@@ -273,66 +233,217 @@ function UsageStats({
   );
 }
 
+function UsageCard({
+  icon,
+  label,
+  used,
+  total,
+  percentage,
+  color,
+  unit = "",
+}: {
+  icon: React.ReactNode;
+  label: string;
+  used: number;
+  total: number;
+  percentage: number;
+  color: "blue" | "purple";
+  unit?: string;
+}) {
+  const colorClasses = {
+    blue: {
+      bg: "bg-blue-50",
+      bar:
+        percentage >= 90
+          ? "bg-red-500"
+          : percentage >= 70
+          ? "bg-yellow-500"
+          : "bg-blue-500",
+    },
+    purple: {
+      bg: "bg-purple-50",
+      bar:
+        percentage >= 90
+          ? "bg-red-500"
+          : percentage >= 70
+          ? "bg-yellow-500"
+          : "bg-purple-500",
+    },
+  };
+
+  return (
+    <div className="bg-background rounded-lg border p-4">
+      <div className="flex items-center gap-3 mb-3">
+        <div
+          className={cn(
+            "w-10 h-10 rounded-lg flex items-center justify-center",
+            colorClasses[color].bg
+          )}
+        >
+          {icon}
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="text-xl font-bold text-foreground">
+            {used}
+            <span className="text-sm font-normal text-muted-foreground">
+              {" "}
+              / {total} {unit}
+            </span>
+          </p>
+        </div>
+      </div>
+      <div className="relative">
+        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+          <div
+            className={cn(
+              "h-2 rounded-full transition-all duration-500",
+              colorClasses[color].bar
+            )}
+            style={{ width: `${Math.min(percentage, 100)}%` }}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          {percentage.toFixed(0)}% used
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function ProjectCard({ project }: { project: Project }) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const duration = formatDuration(project.durationSeconds);
   const fileSize = formatFileSize(project.fileSize);
 
+  const handleDelete = () => {
+    startTransition(async () => {
+      const result = await deleteProject(project.id);
+      if (result.success) {
+        setShowDeleteDialog(false);
+        router.refresh();
+      } else {
+        alert(result.error || "Failed to delete project");
+      }
+    });
+  };
+
   return (
-    <Link
-      href={`/dashboard/projects/${project.id}`}
-      className={cn(
-        "group block bg-card rounded-lg border p-5",
-        "transition-all duration-200",
-        "hover:shadow-lg hover:border-gray-300 hover:-translate-y-0.5"
-      )}
-    >
-      <div className="flex items-center gap-4">
-        {/* File Icon */}
-        <div className="shrink-0">{getFileIcon(project.fileName)}</div>
+    <>
+      <div
+        className={cn(
+          "group bg-card rounded-lg border p-4",
+          "transition-all duration-200",
+          "hover:shadow-md hover:border-gray-300"
+        )}
+      >
+        <div className="flex items-center gap-4">
+          <div className="shrink-0">{getFileIcon(project.fileName)}</div>
 
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <h3 className="text-base font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-              {project.title}
-            </h3>
-            <ProjectStatusBadge status={project.status} />
-          </div>
-
-          <p className="text-sm text-muted-foreground truncate mb-3">
-            {project.fileName}
-          </p>
-
-          <div className="flex items-center gap-5 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" />
-              <span>{formatDate(project.createdAt)}</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-4 mb-2">
+              <Link
+                href={`/dashboard/projects/${project.id}`}
+                className="flex-1 min-w-0"
+              >
+                <h3 className="text-base font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                  {project.title}
+                </h3>
+              </Link>
+              <div className="flex items-center gap-2">
+                <ProjectStatusBadge status={project.status} />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link href={`/dashboard/projects/${project.id}`}>
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Open Project
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-red-600 focus:text-red-600"
+                      onClick={() => setShowDeleteDialog(true)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
-            {duration && (
+
+            <p className="text-sm text-muted-foreground truncate mb-2">
+              {project.fileName}
+            </p>
+
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                <span>{duration}</span>
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{formatDate(project.createdAt)}</span>
+              </div>
+              {duration && (
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{duration}</span>
+                </div>
+              )}
+              {fileSize && <span>{fileSize}</span>}
+            </div>
+
+            {project.errorMessage && (
+              <div className="mt-3 p-2 bg-red-50 border border-red-100 rounded-lg flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-medium text-red-900">
+                    Processing failed
+                  </p>
+                  <p className="text-xs text-red-700 mt-0.5">
+                    {project.errorMessage}
+                  </p>
+                </div>
               </div>
             )}
-            {fileSize && <span>{fileSize}</span>}
           </div>
-
-          {project.errorMessage && (
-            <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-lg flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-xs font-medium text-red-900">
-                  Processing failed
-                </p>
-                <p className="text-xs text-red-700 mt-0.5">
-                  {project.errorMessage}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
-    </Link>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{project.title}" and all associated
+              case studies. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Project"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
