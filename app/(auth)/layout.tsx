@@ -25,11 +25,11 @@ export default async function AuthLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Minimal branding header */}
       <div className="flex items-center gap-2 px-6 py-4">
-        <div className="w-7 h-7 bg-black rounded-lg flex items-center justify-center">
-          <Sparkles className="w-4 h-4 text-white" />
+        <div className="w-7 h-7 bg-muted rounded-lg flex items-center justify-center">
+          <Sparkles className="w-4 h-4 text-foreground" />
         </div>
         <span className="text-sm font-semibold">Casevia</span>
       </div>
@@ -40,8 +40,12 @@ export default async function AuthLayout({
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-4 text-center text-xs text-gray-500">
-        © 2024 Casevia. All rights reserved.
+      <div className="px-6 py-4 text-center text-xs text-muted-foreground">
+        © 2025{" "}
+        <a href="https://casevia.io" target="_blank">
+          Casevia
+        </a>
+        . All rights reserved.
       </div>
     </div>
   );

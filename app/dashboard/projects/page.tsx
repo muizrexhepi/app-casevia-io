@@ -43,10 +43,8 @@ export default async function ProjectsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Projects
-            </h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
+            <p className="text-sm text-muted-foreground">
               Manage your customer interviews and case studies
             </p>
           </div>

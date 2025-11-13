@@ -15,10 +15,13 @@ import {
   ArrowRight,
   Sparkles,
   Globe,
+  Loader2, // Import Loader2 for consistency
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
+// ... (types and formatDate function are unchanged) ...
 
 type CaseStudy = {
   id: string;
@@ -62,7 +65,8 @@ export function CaseStudiesList({
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center space-y-3">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          {/* Use consistent Loader2 */}
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
           <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -77,43 +81,49 @@ export function CaseStudiesList({
       {/* Stats Overview */}
       <div className="grid md:grid-cols-4 gap-4 mb-8">
         <StatCard
-          icon={<BookText className="w-5 h-5 text-blue-600" />}
+          icon={<BookText className="w-5 h-5 text-primary" />}
           label="Total Case Studies"
           value={caseStudies.length}
-          bgColor="bg-blue-50 dark:bg-blue-950/30"
+          variant="primary"
         />
         <StatCard
-          icon={<Globe className="w-5 h-5 text-green-600" />}
+          icon={
+            <Globe className="w-5 h-5 text-green-600 dark:text-green-400" />
+          }
           label="Published"
           value={publishedCount}
-          bgColor="bg-green-50 dark:bg-green-950/30"
+          variant="green"
         />
         <StatCard
-          icon={<FileText className="w-5 h-5 text-orange-600" />}
+          icon={
+            <FileText className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+          }
           label="Drafts"
           value={draftCount}
-          bgColor="bg-orange-50 dark:bg-orange-950/30"
+          variant="orange"
         />
         <StatCard
-          icon={<Eye className="w-5 h-5 text-purple-600" />}
+          icon={
+            <Eye className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          }
           label="Total Views"
           value={totalViews}
-          bgColor="bg-purple-50 dark:bg-purple-950/30"
+          variant="purple"
         />
       </div>
 
-      {/* Upgrade Banner */}
+      {/* Upgrade Banner - Refactored with 'destructive' colors */}
       {isOverLimit && (
-        <div className="rounded-xl border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-6 mb-8">
+        <div className="rounded-xl border-2 border-destructive/30 bg-destructive/10 p-6 mb-8">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="w-6 h-6 text-red-600 dark:text-red-400" />
+            <div className="w-12 h-12 rounded-lg bg-destructive/20 flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-6 h-6 text-destructive" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-red-900 dark:text-red-100 mb-1">
+              <h3 className="font-semibold text-destructive mb-1">
                 Case Study Limit Reached
               </h3>
-              <p className="text-sm text-red-700 dark:text-red-300 mb-4">
+              <p className="text-sm text-destructive/90 mb-4">
                 You've used all {currentPlan.limits.caseStudies} case studies in
                 your {currentPlan.name} plan. Upgrade to create more and unlock
                 advanced features.
@@ -143,24 +153,32 @@ export function CaseStudiesList({
   );
 }
 
+// Refactored StatCard to use a 'variant' prop
 function StatCard({
   icon,
   label,
   value,
-  bgColor,
+  variant,
 }: {
   icon: React.ReactNode;
   label: string;
   value: number;
-  bgColor: string;
+  variant: "primary" | "green" | "orange" | "purple";
 }) {
+  const variants = {
+    primary: "bg-primary/10",
+    green: "bg-green-100 dark:bg-green-950/30",
+    orange: "bg-orange-100 dark:bg-orange-950/30",
+    purple: "bg-purple-100 dark:bg-purple-950/30",
+  };
+
   return (
     <div className="rounded-xl border bg-card p-5">
       <div className="flex items-center gap-3 mb-3">
         <div
           className={cn(
             "w-10 h-10 rounded-lg flex items-center justify-center",
-            bgColor
+            variants[variant]
           )}
         >
           {icon}
@@ -172,14 +190,15 @@ function StatCard({
   );
 }
 
+// Refactored CaseStudyCard for gradient and icon
 function CaseStudyCard({ caseStudy }: { caseStudy: CaseStudy }) {
   return (
     <div className="group rounded-xl border bg-card transition-all duration-200 hover:shadow-lg hover:border-primary/50 overflow-hidden">
       <div className="p-6">
         <div className="flex items-start gap-4">
-          {/* Icon */}
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-6 h-6 text-white" />
+          {/* Icon - Refactored gradient */}
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-6 h-6 text-primary-foreground" />
           </div>
 
           {/* Content */}
@@ -237,7 +256,7 @@ function CaseStudyCard({ caseStudy }: { caseStudy: CaseStudy }) {
         </div>
       </div>
 
-      {/* Action Bar */}
+      {/* Action Bar (already clean) */}
       <div className="border-t bg-muted/50 px-6 py-3">
         <div className="flex items-center justify-between">
           <Link
@@ -262,10 +281,11 @@ function CaseStudyCard({ caseStudy }: { caseStudy: CaseStudy }) {
   );
 }
 
+// Refactored StatusBadge for consistency
 function StatusBadge({ published }: { published: boolean }) {
   if (published) {
     return (
-      <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-green-200 dark:border-green-800">
+      <Badge className="border-transparent bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 hover:bg-green-100/80">
         <CheckCircle2 className="w-3 h-3 mr-1" />
         Published
       </Badge>
@@ -279,12 +299,13 @@ function StatusBadge({ published }: { published: boolean }) {
   );
 }
 
+// Refactored EmptyState with semantic colors
 function EmptyState() {
   return (
-    <div className="rounded-xl border-2 border-dashed p-16 text-center">
+    <div className="rounded-xl border-2 border-dashed border-border p-16 text-center">
       <div className="max-w-md mx-auto">
-        <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <BookText className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+        <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-purple-100/50 dark:from-primary/10 dark:to-purple-950/50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <BookText className="w-10 h-10 text-primary" />
         </div>
         <h3 className="text-xl font-semibold text-foreground mb-2">
           No case studies yet

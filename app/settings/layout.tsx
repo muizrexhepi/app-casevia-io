@@ -21,7 +21,7 @@ export default async function SettingsLayout({
 
   return (
     <>
-      <OrganizationAutoSelector />
+      {/* <OrganizationAutoSelector /> */}
       <SidebarProvider>
         <SettingsSidebar />
         <SidebarInset>

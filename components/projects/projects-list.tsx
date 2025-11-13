@@ -41,6 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { deleteProject } from "@/app/dashboard/projects/[id]/actions";
+import { toast } from "sonner"; // Import toast
 
 type Project = {
   id: string;
@@ -63,6 +64,7 @@ interface ProjectsListProps {
   initialLimits: ProjectPageLimits;
 }
 
+// Helper functions (no changes)
 const formatDate = (date: Date | string) => {
   return new Date(date).toLocaleDateString("en-US", {
     month: "short",
@@ -86,6 +88,7 @@ const formatFileSize = (bytes: number | null) => {
   return `${mb.toFixed(1)} MB`;
 };
 
+// Refactored getFileIcon to use semantic colors
 const getFileIcon = (fileName: string | null) => {
   if (!fileName)
     return (
@@ -96,16 +99,17 @@ const getFileIcon = (fileName: string | null) => {
 
   if (fileName.match(/\.(mp4|mov|avi|webm)$/i)) {
     return (
-      <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-        <Film className="w-5 h-5 text-blue-600" />
+      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+        <Film className="w-5 h-5 text-primary" />
       </div>
     );
   }
 
   if (fileName.match(/\.(mp3|wav|m4a|ogg)$/i)) {
     return (
-      <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-        <FileAudio className="w-5 h-5 text-purple-600" />
+      // Using violet as a "secondary" theme color
+      <div className="w-10 h-10 rounded-lg bg-violet-100 dark:bg-violet-950/50 flex items-center justify-center">
+        <FileAudio className="w-5 h-5 text-violet-600 dark:text-violet-400" />
       </div>
     );
   }
@@ -135,6 +139,7 @@ export function ProjectsList({ projects, initialLimits }: ProjectsListProps) {
   );
 }
 
+// Refactored UsageStats to use Button
 function UsageStats({
   initialLimits,
   projects,
@@ -146,7 +151,7 @@ function UsageStats({
 
   if (isLoading) {
     return (
-      <div className="bg-background rounded-xl border p-8 mb-8">
+      <div className="bg-card rounded-xl border p-8 mb-8">
         <div className="flex items-center justify-center">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
@@ -169,8 +174,8 @@ function UsageStats({
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-foreground">
@@ -182,25 +187,24 @@ function UsageStats({
             </div>
           </div>
         </div>
-        <Link
-          href="/dashboard/billing"
-          className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-        >
-          Upgrade Plan
-        </Link>
+        <Button asChild variant="secondary">
+          <Link href="/dashboard/billing">Upgrade Plan</Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <UsageCard
-          icon={<FileText className="w-5 h-5 text-blue-600" />}
+          icon={<FileText className="w-5 h-5 text-primary" />}
           label="Case Studies"
           used={initialLimits?.caseStudiesUsed}
           total={currentPlan.limits.caseStudies}
           percentage={usagePercentage}
-          color="blue"
+          color="primary"
         />
         <UsageCard
-          icon={<Database className="w-5 h-5 text-purple-600" />}
+          icon={
+            <Database className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          }
           label="Storage"
           used={initialLimits?.storageUsedMb}
           total={currentPlan.limits.storage}
@@ -210,8 +214,8 @@ function UsageStats({
         />
         <div className="bg-background rounded-lg border p-4">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <Users className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-950 flex items-center justify-center">
+              <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Team Seats</p>
@@ -233,6 +237,7 @@ function UsageStats({
   );
 }
 
+// Refactored UsageCard to use semantic/theme-aware colors
 function UsageCard({
   icon,
   label,
@@ -247,24 +252,24 @@ function UsageCard({
   used: number;
   total: number;
   percentage: number;
-  color: "blue" | "purple";
+  color: "primary" | "purple";
   unit?: string;
 }) {
   const colorClasses = {
-    blue: {
-      bg: "bg-blue-50",
+    primary: {
+      bg: "bg-primary/10",
       bar:
         percentage >= 90
-          ? "bg-red-500"
+          ? "bg-destructive"
           : percentage >= 70
-          ? "bg-yellow-500"
-          : "bg-blue-500",
+          ? "bg-yellow-500" // No default "warning" color in shadcn
+          : "bg-primary",
     },
     purple: {
-      bg: "bg-purple-50",
+      bg: "bg-purple-100 dark:bg-purple-950",
       bar:
         percentage >= 90
-          ? "bg-red-500"
+          ? "bg-destructive"
           : percentage >= 70
           ? "bg-yellow-500"
           : "bg-purple-500",
@@ -311,6 +316,7 @@ function UsageCard({
   );
 }
 
+// Refactored ProjectCard to use toast and semantic colors
 function ProjectCard({ project }: { project: Project }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -324,8 +330,9 @@ function ProjectCard({ project }: { project: Project }) {
       if (result.success) {
         setShowDeleteDialog(false);
         router.refresh();
+        toast.success("Project deleted successfully."); // Use toast
       } else {
-        alert(result.error || "Failed to delete project");
+        toast.error(result.error || "Failed to delete project"); // Use toast
       }
     });
   };
@@ -336,7 +343,7 @@ function ProjectCard({ project }: { project: Project }) {
         className={cn(
           "group bg-card rounded-lg border p-4",
           "transition-all duration-200",
-          "hover:shadow-md hover:border-gray-300"
+          "hover:shadow-md hover:border-muted-foreground/30" // Cleaner hover
         )}
       >
         <div className="flex items-center gap-4">
@@ -369,7 +376,7 @@ function ProjectCard({ project }: { project: Project }) {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      className="text-red-600 focus:text-red-600"
+                      className="text-destructive focus:text-destructive" // Use destructive
                       onClick={() => setShowDeleteDialog(true)}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
@@ -399,13 +406,13 @@ function ProjectCard({ project }: { project: Project }) {
             </div>
 
             {project.errorMessage && (
-              <div className="mt-3 p-2 bg-red-50 border border-red-100 rounded-lg flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="mt-3 p-2 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-medium text-red-900">
+                  <p className="text-xs font-medium text-destructive">
                     Processing failed
                   </p>
-                  <p className="text-xs text-red-700 mt-0.5">
+                  <p className="text-xs text-destructive/90 mt-0.5">
                     {project.errorMessage}
                   </p>
                 </div>
@@ -426,11 +433,7 @@ function ProjectCard({ project }: { project: Project }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isPending}
-              className="bg-red-600 hover:bg-red-700"
-            >
+            <AlertDialogAction onClick={handleDelete} disabled={isPending}>
               {isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -447,35 +450,36 @@ function ProjectCard({ project }: { project: Project }) {
   );
 }
 
+// Refactored ProjectStatusBadge to use semantic colors
 function ProjectStatusBadge({ status }: { status: string }) {
   const badges = {
     uploading: {
-      bg: "bg-blue-50",
-      text: "text-blue-700",
+      bg: "bg-primary/10",
+      text: "text-primary",
       label: "Uploading",
       icon: <Loader2 className="w-3 h-3 animate-spin" />,
     },
     transcribing: {
-      bg: "bg-purple-50",
-      text: "text-purple-700",
+      bg: "bg-purple-100 dark:bg-purple-950",
+      text: "text-purple-700 dark:text-purple-400",
       label: "Transcribing",
       icon: <Loader2 className="w-3 h-3 animate-spin" />,
     },
     analyzing: {
-      bg: "bg-indigo-50",
-      text: "text-indigo-700",
+      bg: "bg-indigo-100 dark:bg-indigo-950",
+      text: "text-indigo-700 dark:text-indigo-400",
       label: "Analyzing",
       icon: <Loader2 className="w-3 h-3 animate-spin" />,
     },
     ready: {
-      bg: "bg-green-50",
-      text: "text-green-700",
+      bg: "bg-green-100 dark:bg-green-950",
+      text: "text-green-700 dark:text-green-400",
       label: "Ready",
       icon: <CheckCircle2 className="w-3 h-3" />,
     },
     failed: {
-      bg: "bg-red-50",
-      text: "text-red-700",
+      bg: "bg-destructive/10",
+      text: "text-destructive",
       label: "Failed",
       icon: <AlertCircle className="w-3 h-3" />,
     },
@@ -498,12 +502,13 @@ function ProjectStatusBadge({ status }: { status: string }) {
   );
 }
 
+// Refactored EmptyState to use Button and semantic colors
 function EmptyState() {
   return (
-    <div className="bg-background rounded-xl border-2 border-dashed p-16 text-center">
+    <div className="bg-card rounded-xl border-2 border-dashed border-border p-16 text-center">
       <div className="max-w-md mx-auto">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <FileText className="w-8 h-8 text-blue-600" />
+        <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <FileText className="w-8 h-8 text-primary" />
         </div>
         <h3 className="text-xl font-semibold text-foreground mb-2">
           No projects yet
@@ -512,13 +517,12 @@ function EmptyState() {
           Start by uploading your first customer interview to generate a
           professional case study
         </p>
-        <Link
-          href="/dashboard/projects/new"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-all hover:shadow-md"
-        >
-          <Plus className="w-5 h-5" />
-          Create Your First Project
-        </Link>
+        <Button asChild size="lg">
+          <Link href="/dashboard/projects/new">
+            <Plus className="w-5 h-5 mr-2" />
+            Create Your First Project
+          </Link>
+        </Button>
       </div>
     </div>
   );

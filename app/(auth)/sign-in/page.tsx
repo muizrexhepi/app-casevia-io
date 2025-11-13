@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -62,50 +65,53 @@ export default function SignInPage() {
   return (
     <div className="w-full space-y-6">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-semibold text-gray-900">Welcome back</h2>
-        <p className="text-sm text-gray-500">Sign in to your Casevia account</p>
+        <h2 className="text-2xl font-semibold text-foreground">Welcome back</h2>
+        <p className="text-sm text-muted-foreground">
+          Sign in to your Casevia account
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <label
+          <Label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
+            // className="block text-sm font-medium text-muted-foreground"
           >
             Email address
-          </label>
-          <input
+          </Label>
+          <Input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="h-10"
+            // className="w-full px-3 py-2 text-sm border  rounded-lg focus:outline-none focus:ring-2 focus:ring-foreground focus:border-transparent"
             placeholder="you@example.com"
           />
         </div>
 
         <div className="space-y-2">
-          <label
+          <Label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
+            // className="block text-sm font-medium text-muted-foreground"
           >
             Password
-          </label>
+          </Label>
           <div className="relative">
-            <input
+            <Input
               id="password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent pr-10"
+              className="h-10"
               placeholder="••••••••"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-muted-foreground/90"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
@@ -118,25 +124,27 @@ export default function SignInPage() {
         </div>
 
         <div className="flex items-center justify-between">
-          <label className="flex items-center">
-            <input
+          <Label className="flex items-center">
+            <Input
               type="checkbox"
-              className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
+              className="w-4 h-4 text-foreground rounded focus:ring-foreground"
             />
-            <span className="ml-2 text-sm text-gray-600">Remember me</span>
-          </label>
+            <span className="text-sm text-muted-foreground">Remember me</span>
+          </Label>
           <Link
             href="/forgot-password"
-            className="text-sm text-gray-600 hover:text-gray-900"
+            className="text-sm text-muted-foreground hover:text-foreground"
           >
             Forgot password?
           </Link>
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-gray-900 text-white py-2 px-4 rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all font-medium text-sm"
+          variant={"default"}
+          size={"lg"}
+          className="w-full"
         >
           {loading ? (
             <div className="flex items-center justify-center gap-2">
@@ -146,21 +154,25 @@ export default function SignInPage() {
           ) : (
             "Sign in"
           )}
-        </button>
+        </Button>
       </form>
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-200"></div>
+          <div className="w-full border-t"></div>
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="px-2 bg-white text-gray-500">Or continue with</span>
+          <span className="px-2 bg-muted text-muted-foreground">
+            Or continue with
+          </span>
         </div>
       </div>
 
-      <button
+      <Button
         onClick={handleGoogleSignIn}
-        className="w-full flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+        variant={"outline"}
+        className="w-full"
+        size="lg"
       >
         <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
           <path
@@ -181,13 +193,13 @@ export default function SignInPage() {
           />
         </svg>
         Continue with Google
-      </button>
+      </Button>
 
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-muted-foreground">
         Don't have an account?{" "}
         <Link
           href="/sign-up"
-          className="text-gray-900 hover:text-gray-700 font-medium"
+          className="text-foreground hover:text-muted-foreground font-medium"
         >
           Sign up
         </Link>

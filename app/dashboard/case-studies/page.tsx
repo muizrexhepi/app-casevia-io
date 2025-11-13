@@ -39,10 +39,10 @@ export default async function CaseStudiesPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
+            <h1 className="text-2xl font-semibold tracking-tight">
               Case Studies
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Manage and publish your generated case studies
             </p>
           </div>
