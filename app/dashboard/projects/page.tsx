@@ -7,8 +7,8 @@ import { project, planLimits } from "@/lib/auth/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import { Plus, FileText } from "lucide-react";
-import { ProjectsList } from "@/components/projects/projects-list";
 import { Button } from "@/components/ui/button";
+import { ProjectsListEnterprise } from "@/components/projects/projects-list";
 
 export default async function ProjectsPage() {
   // Get authenticated session
@@ -57,7 +57,7 @@ export default async function ProjectsPage() {
         </div>
 
         {/* Projects List with Subscription Context */}
-        <ProjectsList projects={projects} initialLimits={limits} />
+        <ProjectsListEnterprise projects={projects} initialLimits={limits} />
       </div>
     </div>
   );

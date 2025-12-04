@@ -4,15 +4,19 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Upload,
-  AlertCircle,
   Film,
   FileAudio,
   CheckCircle2,
   Loader2,
   ArrowLeft,
+  X,
+  HardDrive,
+  Clock,
+  Zap,
 } from "lucide-react";
 import { Plan } from "@/lib/constants/plans";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface UploadFormProps {
   organizationId: string;
@@ -33,6 +37,8 @@ export function UploadForm({
 
   const usagePercentage =
     (limits.caseStudiesUsed / currentPlan.limits.caseStudies) * 100;
+
+  // --- Logic Preserved Exactly As Provided ---
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -214,216 +220,281 @@ export function UploadForm({
     }
   };
 
+  // --- Render ---
+
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
+    <div className="min-h-screen bg-background p-6 lg:p-10">
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Navigation & Header */}
+        <div className="space-y-4">
           <button
             onClick={() => router.push("/dashboard/projects")}
-            className="text-sm text-muted-foreground hover:text-foreground mb-4 flex items-center gap-2"
+            className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors px-0 py-2"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back to Projects
           </button>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Create New Case Study
-          </h1>
-          <p className="text-muted-foreground">
-            Upload your customer interview to generate a professional case study
-          </p>
+
+          <div className="flex flex-col gap-1">
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+              New Case Study
+            </h1>
+            <p className="text-base text-muted-foreground max-w-2xl">
+              Upload your customer interview recording to automatically generate
+              a detailed case study, transcript, and key insights.
+            </p>
+          </div>
         </div>
 
-        {/* Plan Limits Card */}
-        <div className="bg-card rounded-lg shadow-sm border p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-sm font-semibold text-foreground">
-                Current Plan: {currentPlan.name}
-              </h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                Usage this month
-              </p>
-            </div>
-            <button
-              onClick={() => router.push("/settings/billing")}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Upload Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Upload Zone */}
+            <div
+              className={cn(
+                "relative group border rounded-xl bg-card transition-all duration-200 overflow-hidden",
+                isDragging
+                  ? "border-primary ring-2 ring-primary/20 bg-primary/5"
+                  : "border-border hover:border-primary/50 hover:shadow-sm",
+                file ? "border-solid" : "border-dashed"
+              )}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
             >
-              Upgrade Plan
-            </button>
-          </div>
+              <input
+                type="file"
+                onChange={handleFileInput}
+                accept="video/mp4,video/quicktime,video/x-msvideo,audio/mpeg,audio/wav,audio/mp3"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                disabled={uploading || !!file} // Disable input if file is selected (use remove button instead)
+              />
 
-          <div className="space-y-3">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-muted-foreground">Case Studies</span>
-                <span className="font-medium text-foreground">
-                  {limits.caseStudiesUsed} / {currentPlan.limits.caseStudies}
-                </span>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-all ${
-                    usagePercentage >= 90
-                      ? "bg-red-600"
-                      : usagePercentage >= 70
-                      ? "bg-yellow-600"
-                      : "bg-blue-600"
-                  }`}
-                  style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  Max Video Length
-                </p>
-                <p className="text-sm font-medium text-foreground">
-                  {currentPlan.limits.videoLength} minutes
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  Storage Available
-                </p>
-                <p className="text-sm font-medium text-foreground">
-                  {limits.storageUsedMb} / {currentPlan.limits.storage} MB
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Upload Area */}
-        <div className="bg-card rounded-lg shadow-sm border p-8">
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`relative border-2 border-dashed rounded-xl p-12 text-center transition-all ${
-              isDragging
-                ? "border-blue-500 bg-blue-50"
-                : "bg-accent/50 hover:bg-accent/60"
-            }`}
-          >
-            <input
-              type="file"
-              onChange={handleFileInput}
-              accept="video/mp4,video/quicktime,video/x-msvideo,audio/mpeg,audio/wav,audio/mp3"
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              disabled={uploading}
-            />
-
-            {!file ? (
-              <>
-                <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Drop your file here or click to browse
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Supports MP4, MOV, AVI, MP3, WAV
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Max {currentPlan.limits.videoLength} minutes
-                </p>
-              </>
-            ) : (
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-3 bg-card border rounded-lg px-4 py-3">
-                  {file.type.startsWith("video/") ? (
-                    <Film className="w-5 h-5 text-blue-600" />
-                  ) : (
-                    <FileAudio className="w-5 h-5 text-blue-600" />
-                  )}
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-foreground">
-                      {file.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {validation.sizeMB} MB • ~{validation.duration} minutes
-                    </p>
+              {!file ? (
+                <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                  <div className="w-16 h-16 mb-6 rounded-full bg-muted/50 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                    <Upload className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                  <CheckCircle2 className="w-5 h-5 text-green-600 ml-2" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    Drag and drop your file here
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
+                    Supports MP4, MOV, AVI, MP3, WAV up to{" "}
+                    {currentPlan.limits.videoLength} minutes.
+                  </p>
+                  <span className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-md group-hover:bg-primary/20 transition-colors">
+                    or click to browse
+                  </span>
                 </div>
+              ) : (
+                <div className="p-8">
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={cn(
+                        "w-12 h-12 rounded-lg flex items-center justify-center shrink-0",
+                        file.type.startsWith("video/")
+                          ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                          : "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
+                      )}
+                    >
+                      {file.type.startsWith("video/") ? (
+                        <Film className="w-6 h-6" />
+                      ) : (
+                        <FileAudio className="w-6 h-6" />
+                      )}
+                    </div>
 
-                <button
-                  onClick={() => setFile(null)}
-                  disabled={uploading}
-                  className="text-sm text-muted-foreground hover:text-foreground underline disabled:opacity-50"
-                >
-                  Choose different file
-                </button>
-              </div>
-            )}
-          </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-base font-medium text-foreground truncate pr-4">
+                          {file.name}
+                        </p>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault(); // Prevent input click
+                            setFile(null);
+                          }}
+                          disabled={uploading}
+                          className="text-muted-foreground hover:text-destructive transition-colors p-1 -mr-2 z-30 relative"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
 
-          {file && (
-            <div className="mt-6 flex justify-end gap-3">
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <HardDrive className="w-3.5 h-3.5" />
+                          {validation.sizeMB} MB
+                        </span>
+                        <span className="w-1 h-1 rounded-full bg-border" />
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5" />~
+                          {validation.duration} mins
+                        </span>
+                      </div>
+
+                      {uploading ? (
+                        <div className="mt-4 space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-primary font-medium">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Uploading & Processing...
+                          </div>
+                          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary animate-progress origin-left"
+                              style={{ width: "100%" }}
+                            ></div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-4 flex items-center gap-2 text-sm text-green-600 dark:text-green-400 font-medium">
+                          <CheckCircle2 className="w-4 h-4" />
+                          Ready to upload
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3 pt-2">
               <button
-                onClick={() => {
-                  setFile(null);
-                }}
-                disabled={uploading}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-foreground disabled:opacity-50"
+                onClick={() => setFile(null)}
+                disabled={!file || uploading}
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpload}
-                disabled={uploading || !file}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-              >
-                {uploading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Uploading...
-                  </>
-                ) : (
-                  "Upload & Process"
+                disabled={!file || uploading}
+                className={cn(
+                  "px-6 py-2 rounded-lg text-sm font-medium text-primary-foreground shadow-sm transition-all focus:ring-2 focus:ring-offset-2 focus:ring-primary",
+                  !file || uploading
+                    ? "bg-muted text-muted-foreground cursor-not-allowed"
+                    : "bg-primary hover:bg-primary/90"
                 )}
+              >
+                {uploading ? "Processing..." : "Create Case Study"}
               </button>
             </div>
-          )}
-        </div>
-
-        {/* Info Cards */}
-        <div className="grid md:grid-cols-3 gap-4 mt-6">
-          <div className="bg-card rounded-lg border p-4">
-            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-3">
-              <span className="text-xl">🎙️</span>
-            </div>
-            <h4 className="font-semibold text-foreground mb-1">
-              AI Transcription
-            </h4>
-            <p className="text-xs text-muted-foreground">
-              Automatic speech-to-text with speaker detection
-            </p>
           </div>
 
-          <div className="bg-card rounded-lg border p-4">
-            <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center mb-3">
-              <span className="text-xl">✨</span>
-            </div>
-            <h4 className="font-semibold text-foreground mb-1">
-              Smart Analysis
-            </h4>
-            <p className="text-xs text-muted-foreground">
-              Extract key insights and powerful quotes
-            </p>
-          </div>
+          {/* Sidebar - Plan Limits & Info */}
+          <div className="space-y-6">
+            {/* Plan Usage Widget */}
+            <div className="bg-card border rounded-xl p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="space-y-0.5">
+                  <h3 className="font-medium text-sm text-foreground">
+                    Plan Usage
+                  </h3>
+                  <p className="text-xs text-muted-foreground capitalize">
+                    {currentPlan.name} Plan
+                  </p>
+                </div>
+                <button
+                  onClick={() => router.push("/settings/billing")}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Upgrade
+                </button>
+              </div>
 
-          <div className="bg-card rounded-lg border p-4">
-            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mb-3">
-              <span className="text-xl">📄</span>
+              <div className="space-y-4">
+                {/* Case Study Progress */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Case Studies</span>
+                    <span
+                      className={cn(
+                        "font-medium",
+                        usagePercentage >= 90
+                          ? "text-destructive"
+                          : "text-foreground"
+                      )}
+                    >
+                      {limits.caseStudiesUsed} /{" "}
+                      {currentPlan.limits.caseStudies}
+                    </span>
+                  </div>
+                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all duration-500",
+                        usagePercentage >= 90
+                          ? "bg-destructive"
+                          : usagePercentage >= 70
+                          ? "bg-amber-500"
+                          : "bg-primary"
+                      )}
+                      style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Storage & Video Limits */}
+                <div className="grid grid-cols-2 gap-3 pt-3 border-t">
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                      Video Limit
+                    </p>
+                    <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <Film className="w-3.5 h-3.5 text-muted-foreground" />
+                      {currentPlan.limits.videoLength} mins
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                      Storage
+                    </p>
+                    <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <HardDrive className="w-3.5 h-3.5 text-muted-foreground" />
+                      {(limits.storageUsedMb / 1024).toFixed(1)} GB
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h4 className="font-semibold text-foreground mb-1">
-              Ready to Share
-            </h4>
-            <p className="text-xs text-muted-foreground">
-              Publish online or export as PDF/Markdown
-            </p>
+
+            {/* Quick Tips */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">
+                Why use AI Case Studies?
+              </h4>
+              <div className="bg-muted/30 border border-transparent hover:border-border rounded-lg p-3 transition-colors">
+                <div className="flex gap-3">
+                  <div className="p-1.5 bg-background rounded-md shadow-sm border shrink-0 h-fit">
+                    <Zap className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Instant Analysis
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Turn raw interviews into structured insights in minutes.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-muted/30 border border-transparent hover:border-border rounded-lg p-3 transition-colors">
+                <div className="flex gap-3">
+                  <div className="p-1.5 bg-background rounded-md shadow-sm border shrink-0 h-fit">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Sales Ready
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Get professional assets ready to share with prospects.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
