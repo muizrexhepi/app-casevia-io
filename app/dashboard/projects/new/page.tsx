@@ -5,7 +5,8 @@ import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/drizzle";
 import { planLimits } from "@/lib/auth/schema";
 import { eq } from "drizzle-orm";
-import { UploadFormWrapper } from "@/components/projects/upload-form-wrapper";
+import { PLANS } from "@/lib/constants/plans";
+import { UploadForm } from "@/components/projects/upload-form";
 
 export default async function NewProjectPage() {
   const headersList = await headers();
@@ -19,33 +20,18 @@ export default async function NewProjectPage() {
 
   const organizationId = session.session.activeOrganizationId;
 
-  // Fetch plan limits
   const [limits] = await db
     .select()
     .from(planLimits)
     .where(eq(planLimits.organizationId, organizationId));
 
-  // If no limits exist, create default free plan
-  if (!limits) {
-    const nextReset = new Date();
-    nextReset.setMonth(nextReset.getMonth() + 1);
-    nextReset.setDate(1);
-    nextReset.setHours(0, 0, 0, 0);
-
-    await db.insert(planLimits).values({
-      organizationId,
-      planId: "free",
-      caseStudiesUsed: 0,
-      storageUsedMb: 0,
-      socialPostsUsed: 0,
-      resetAt: nextReset,
-    });
-
-    // Refresh page to get the new limits
-    redirect("/dashboard/projects/new");
-  }
+  const plan = PLANS.find((p) => p.id === limits?.planId) || PLANS[0];
 
   return (
-    <UploadFormWrapper organizationId={organizationId} initialLimits={limits} />
+    <UploadForm
+      organizationId={organizationId}
+      currentPlan={plan}
+      limits={limits}
+    />
   );
 }

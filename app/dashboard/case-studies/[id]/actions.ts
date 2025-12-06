@@ -3,10 +3,12 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/drizzle";
-import { caseStudy } from "@/lib/auth/schema";
+import { caseStudy, planLimits } from "@/lib/auth/schema";
 import { auth } from "@/lib/auth/server";
 import { eq, and } from "drizzle-orm";
 import { headers } from "next/headers";
+import { TEMPLATES } from "@/lib/templates";
+import { PLANS } from "@/lib/constants/plans";
 
 // A simple function to create a URL-friendly slug
 const slugify = (str: string) =>
@@ -109,5 +111,91 @@ export async function updatePublishStatus(
     return { success: true, newSlug: slugToSet };
   } catch (error) {
     return { success: false, error: "Failed to update status." };
+  }
+}
+
+export async function updateTemplate(caseStudyId: string, templateId: string) {
+  // 1. Authenticate
+  const headersList = await headers();
+  const session = await auth.api.getSession({
+    headers: headersList,
+  });
+
+  if (!session?.user || !session.session.activeOrganizationId) {
+    throw new Error("Not authenticated");
+  }
+
+  const organizationId = session.session.activeOrganizationId;
+
+  // 2. Validate template exists
+  const template = TEMPLATES.find((t) => t.id === templateId);
+  if (!template) {
+    throw new Error("Invalid template");
+  }
+
+  // 3. Check plan limits
+  const [limits] = await db
+    .select()
+    .from(planLimits)
+    .where(eq(planLimits.organizationId, organizationId));
+
+  if (!limits) {
+    throw new Error("Plan limits not found");
+  }
+
+  const plan = PLANS.find((p) => p.id === limits.planId);
+  if (!plan) {
+    throw new Error("Invalid plan");
+  }
+
+  // 4. Check if user can access this template
+  const tierMap: Record<string, string[]> = {
+    free: ["free"],
+    freelancer: ["free", "pro"],
+    pro: ["free", "pro"],
+    agency: ["free", "pro", "agency"],
+  };
+
+  const allowedTiers = tierMap[plan.id] || ["free"];
+  if (!allowedTiers.includes(template.tier)) {
+    throw new Error(
+      `${template.name} template requires ${template.tier} plan or higher`
+    );
+  }
+
+  // 5. Verify case study ownership
+  const [existingStudy] = await db
+    .select()
+    .from(caseStudy)
+    .where(
+      and(
+        eq(caseStudy.id, caseStudyId),
+        eq(caseStudy.organizationId, organizationId)
+      )
+    );
+
+  if (!existingStudy) {
+    throw new Error("Case study not found");
+  }
+
+  // 6. Update template
+  try {
+    await db
+      .update(caseStudy)
+      .set({
+        templateUsed: templateId,
+        updatedAt: new Date(),
+      })
+      .where(eq(caseStudy.id, caseStudyId));
+
+    // 7. Revalidate paths
+    revalidatePath(`/dashboard/case-studies/${caseStudyId}`);
+    if (existingStudy.publicSlug) {
+      revalidatePath(`/${existingStudy.publicSlug}`);
+    }
+
+    return { success: true, message: "Template updated successfully" };
+  } catch (error) {
+    return { success: false, error: "Failed to update template" };
   }
 }

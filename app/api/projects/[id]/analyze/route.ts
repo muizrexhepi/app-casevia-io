@@ -113,6 +113,7 @@ export async function POST(
       solution: analysisResult.the_solution,
       results: analysisResult.key_results_text,
       keyQuotes: analysisResult.powerful_quotes || [],
+      templateUsed: "modern",
       metrics: analysisResult.key_results || [],
       keyTakeaways: analysisResult.key_takeaways || [],
       publicSlug: slug,

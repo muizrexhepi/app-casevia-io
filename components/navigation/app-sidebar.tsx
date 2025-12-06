@@ -32,7 +32,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     { title: "Projects", url: "/dashboard/projects", icon: Bot },
     { title: "Case Studies", url: "/dashboard/case-studies", icon: BookOpen },
     { title: "Analytics", url: "/dashboard/analytics", icon: PieChart },
-    { title: "Library", url: "/dashboard/library", icon: Frame },
+    { title: "Templates", url: "/dashboard/templates", icon: Frame },
   ];
 
   return (

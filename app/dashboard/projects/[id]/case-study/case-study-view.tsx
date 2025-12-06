@@ -11,11 +11,14 @@ import {
   Sparkles,
   FileText,
   FileCode,
-  Save,
+  Check,
   Loader2,
   X,
-  Check,
-  ExternalLink,
+  Building2,
+  Quote,
+  TrendingUp,
+  Globe,
+  Calendar,
 } from "lucide-react";
 import { updateCaseStudyContent } from "../actions";
 import { toast } from "sonner";
@@ -23,7 +26,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,9 +75,9 @@ export function CaseStudyView({
       if (result.success) {
         setIsEditing(false);
         router.refresh();
-        toast.success("Case study saved successfully!");
+        toast.success("Changes saved successfully");
       } else {
-        toast.error(result.error || "Failed to save case study");
+        toast.error(result.error || "Failed to save changes");
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
@@ -86,11 +88,12 @@ export function CaseStudyView({
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard!");
+    toast.success("Copied to clipboard");
   };
 
+  // Helper for generating markdown content for copy/export
   const generateMarkdown = (): string => {
-    // Use the export-utils version for consistency
+    // Logic placeholder matching your existing implementation
     const { generateMarkdown: genMd } = require("@/lib/export-utils");
     return genMd(
       {
@@ -112,6 +115,7 @@ export function CaseStudyView({
 
   const handleDownload = async (type: "markdown" | "html" | "pdf") => {
     setIsExporting(true);
+    const toastId = toast.loading(`Preparing ${type.toUpperCase()}...`);
 
     try {
       const {
@@ -120,31 +124,16 @@ export function CaseStudyView({
         generatePDF,
         downloadFile,
       } = await import("@/lib/export-utils");
-      const filename = caseStudy.publicSlug || "case-study";
 
-      // Prepare case study data
-      const caseStudyData = {
-        title: caseStudy.title,
-        summary: caseStudy.summary,
-        clientName: caseStudy.clientName,
-        clientIndustry: caseStudy.clientIndustry,
-        challenge: caseStudy.challenge,
-        solution: caseStudy.solution,
-        results: caseStudy.results,
-        metrics: caseStudy.metrics,
-        keyQuotes: caseStudy.keyQuotes,
-        keyTakeaways: caseStudy.keyTakeaways,
-        publicSlug: caseStudy.publicSlug,
-      };
+      const filename = caseStudy.publicSlug || "case-study";
+      const caseStudyData = { ...caseStudy };
 
       if (type === "markdown") {
         const content = genMd(caseStudyData, isFreePlan);
         downloadFile(content, `${filename}.md`, "text/markdown");
-        toast.success("Markdown file downloaded!");
       } else if (type === "html") {
         const content = generateHTML(caseStudyData, isFreePlan);
         downloadFile(content, `${filename}.html`, "text/html");
-        toast.success("HTML file downloaded!");
       } else if (type === "pdf") {
         const blob = await generatePDF(caseStudyData, isFreePlan);
         const url = URL.createObjectURL(blob);
@@ -155,364 +144,418 @@ export function CaseStudyView({
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        toast.success("PDF file downloaded!");
       }
+
+      toast.success(`${type.toUpperCase()} downloaded successfully`, {
+        id: toastId,
+      });
     } catch (error) {
       console.error("Export error:", error);
-      toast.error(`Failed to export ${type.toUpperCase()}`);
+      toast.error("Export failed", { id: toastId });
     } finally {
       setIsExporting(false);
     }
   };
 
-  const handlePublish = () => {
-    // Navigate to the case study detail page where they can actually publish
-    router.push(`/dashboard/case-studies/${caseStudy.id}`);
-  };
-
   return (
-    <div className="container mx-auto max-w-7xl py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push(`/dashboard/projects/${project.id}`)}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Project
-        </Button>
+    <div className="min-h-screen bg-background p-6 lg:p-10">
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Navigation & Header */}
+        <div className="space-y-4">
+          <button
+            onClick={() => router.push(`/dashboard/projects/${project.id}`)}
+            className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors px-0 py-2"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            Back to Project
+          </button>
 
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <Badge
-                variant="secondary"
-                className="bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400"
-              >
-                <Sparkles className="w-3 h-3 mr-1" />
-                AI Generated
-              </Badge>
-              {isEditing && (
-                <Badge variant="outline">
-                  <Edit3 className="w-3 h-3 mr-1" />
-                  Editing
-                </Badge>
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                  <Sparkles className="w-3 h-3" />
+                  AI Generated
+                </span>
+                {isEditing && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    <Edit3 className="w-3 h-3" />
+                    Editing
+                  </span>
+                )}
+              </div>
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+                {caseStudy.title}
+              </h1>
+              <p className="text-base text-muted-foreground max-w-2xl">
+                Review, edit, and export your generated case study.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              {isEditing ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setCaseStudy(initialCaseStudy);
+                      setIsEditing(false);
+                    }}
+                    disabled={isSaving}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSave} disabled={isSaving}>
+                    {isSaving && (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    )}
+                    Save Changes
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={() => setIsEditing(true)}>
+                    <Edit3 className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" disabled={isExporting}>
+                        {isExporting ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Download className="w-4 h-4 mr-2" />
+                        )}
+                        Export
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem
+                        onClick={() => handleDownload("markdown")}
+                      >
+                        <FileText className="w-4 h-4 mr-2" /> Markdown (.md)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDownload("html")}>
+                        <FileCode className="w-4 h-4 mr-2" /> HTML (.html)
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleDownload("pdf")}>
+                        <FileText className="w-4 h-4 mr-2" /> PDF (.pdf)
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    onClick={() =>
+                      router.push(`/dashboard/case-studies/${caseStudy.id}`)
+                    }
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Publish
+                  </Button>
+                </>
               )}
             </div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              {caseStudy.title}
-            </h1>
-            <p className="text-muted-foreground">
-              Review and edit your case study draft
-            </p>
-          </div>
-
-          <div className="flex gap-2">
-            {isEditing ? (
-              <>
-                <Button onClick={handleSave} disabled={isSaving}>
-                  {isSaving ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Check className="w-4 h-4 mr-2" />
-                  )}
-                  Save Changes
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setCaseStudy(initialCaseStudy);
-                    setIsEditing(false);
-                  }}
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Cancel
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="outline" onClick={() => setIsEditing(true)}>
-                  <Edit3 className="w-4 h-4 mr-2" />
-                  Edit
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" disabled={isExporting}>
-                      {isExporting ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Download className="w-4 h-4 mr-2" />
-                      )}
-                      Export
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => handleDownload("markdown")}
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Markdown (.md)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDownload("html")}>
-                      <FileCode className="w-4 h-4 mr-2" />
-                      HTML (.html)
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleDownload("pdf")}>
-                      <FileText className="w-4 h-4 mr-2" />
-                      PDF (.pdf)
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button onClick={handlePublish}>
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Continue to Publish
-                </Button>
-              </>
-            )}
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <div className="rounded-xl border bg-card p-8">
-            {isEditing ? (
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={caseStudy.title}
-                    onChange={(e) =>
-                      setCaseStudy({ ...caseStudy, title: e.target.value })
-                    }
-                    className="text-lg font-semibold"
-                  />
-                </div>
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Content Area */}
+          <div className="lg:col-span-2">
+            <div className="border rounded-xl bg-card shadow-sm overflow-hidden">
+              <div className="p-6 lg:p-8">
+                {isEditing ? (
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Title</Label>
+                      <Input
+                        id="title"
+                        value={caseStudy.title}
+                        onChange={(e) =>
+                          setCaseStudy({ ...caseStudy, title: e.target.value })
+                        }
+                        className="text-lg font-medium"
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="summary">Summary</Label>
-                  <Textarea
-                    id="summary"
-                    value={caseStudy.summary}
-                    onChange={(e) =>
-                      setCaseStudy({
-                        ...caseStudy,
-                        summary: e.target.value,
-                      })
-                    }
-                    rows={3}
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="summary">Executive Summary</Label>
+                      <Textarea
+                        id="summary"
+                        value={caseStudy.summary}
+                        onChange={(e) =>
+                          setCaseStudy({
+                            ...caseStudy,
+                            summary: e.target.value,
+                          })
+                        }
+                        rows={3}
+                      />
+                    </div>
 
-                <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-muted/50">
-                  <div className="space-y-2">
-                    <Label htmlFor="clientName" className="text-xs">
-                      Client Name
-                    </Label>
-                    <Input
-                      id="clientName"
-                      value={caseStudy.clientName || ""}
-                      onChange={(e) =>
-                        setCaseStudy({
-                          ...caseStudy,
-                          clientName: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="clientIndustry" className="text-xs">
-                      Industry
-                    </Label>
-                    <Input
-                      id="clientIndustry"
-                      value={caseStudy.clientIndustry || ""}
-                      onChange={(e) =>
-                        setCaseStudy({
-                          ...caseStudy,
-                          clientIndustry: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="challenge">The Challenge</Label>
-                  <Textarea
-                    id="challenge"
-                    value={caseStudy.challenge}
-                    onChange={(e) =>
-                      setCaseStudy({
-                        ...caseStudy,
-                        challenge: e.target.value,
-                      })
-                    }
-                    rows={6}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="solution">The Solution</Label>
-                  <Textarea
-                    id="solution"
-                    value={caseStudy.solution}
-                    onChange={(e) =>
-                      setCaseStudy({
-                        ...caseStudy,
-                        solution: e.target.value,
-                      })
-                    }
-                    rows={6}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="results">The Results</Label>
-                  <Textarea
-                    id="results"
-                    value={caseStudy.results}
-                    onChange={(e) =>
-                      setCaseStudy({
-                        ...caseStudy,
-                        results: e.target.value,
-                      })
-                    }
-                    rows={6}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div
-                ref={previewRef}
-                className="prose dark:prose-invert max-w-none"
-              >
-                <h1 className="text-3xl font-bold mb-4">{caseStudy.title}</h1>
-                <p className="text-lg text-muted-foreground lead mb-8">
-                  {caseStudy.summary}
-                </p>
-
-                {(caseStudy.clientName || caseStudy.clientIndustry) && (
-                  <div className="not-prose bg-muted rounded-lg p-5 my-8 border">
                     <div className="grid grid-cols-2 gap-4">
-                      {caseStudy.clientName && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">
-                            Client
-                          </p>
-                          <p className="text-sm font-semibold">
-                            {caseStudy.clientName}
-                          </p>
-                        </div>
-                      )}
-                      {caseStudy.clientIndustry && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">
-                            Industry
-                          </p>
-                          <p className="text-sm font-semibold">
-                            {caseStudy.clientIndustry}
-                          </p>
-                        </div>
-                      )}
+                      <div className="space-y-2">
+                        <Label htmlFor="clientName">Client Name</Label>
+                        <Input
+                          id="clientName"
+                          value={caseStudy.clientName || ""}
+                          onChange={(e) =>
+                            setCaseStudy({
+                              ...caseStudy,
+                              clientName: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="clientIndustry">Industry</Label>
+                        <Input
+                          id="clientIndustry"
+                          value={caseStudy.clientIndustry || ""}
+                          onChange={(e) =>
+                            setCaseStudy({
+                              ...caseStudy,
+                              clientIndustry: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="challenge">The Challenge</Label>
+                      <Textarea
+                        id="challenge"
+                        value={caseStudy.challenge}
+                        onChange={(e) =>
+                          setCaseStudy({
+                            ...caseStudy,
+                            challenge: e.target.value,
+                          })
+                        }
+                        rows={6}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="solution">The Solution</Label>
+                      <Textarea
+                        id="solution"
+                        value={caseStudy.solution}
+                        onChange={(e) =>
+                          setCaseStudy({
+                            ...caseStudy,
+                            solution: e.target.value,
+                          })
+                        }
+                        rows={6}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="results">The Results</Label>
+                      <Textarea
+                        id="results"
+                        value={caseStudy.results}
+                        onChange={(e) =>
+                          setCaseStudy({
+                            ...caseStudy,
+                            results: e.target.value,
+                          })
+                        }
+                        rows={6}
+                      />
                     </div>
                   </div>
-                )}
-
-                <h2>The Challenge</h2>
-                <p className="whitespace-pre-wrap">{caseStudy.challenge}</p>
-
-                <h2>The Solution</h2>
-                <p className="whitespace-pre-wrap">{caseStudy.solution}</p>
-
-                <h2>The Results</h2>
-                <p className="whitespace-pre-wrap">{caseStudy.results}</p>
-
-                {caseStudy.metrics && caseStudy.metrics.length > 0 && (
-                  <>
-                    <h2>Key Metrics</h2>
-                    <div className="not-prose grid gap-4 my-6">
-                      {caseStudy.metrics.map((metric: any, idx: number) => (
-                        <div
-                          key={idx}
-                          className="rounded-lg border-2 border-primary/20 bg-primary/5 p-5"
-                        >
-                          <p className="text-2xl font-bold text-primary mb-2">
-                            {metric.metric}
-                          </p>
-                          <p className="text-sm text-muted-foreground italic">
-                            "{metric.quote}"
-                          </p>
+                ) : (
+                  <div
+                    ref={previewRef}
+                    className="prose prose-slate dark:prose-invert max-w-none"
+                  >
+                    {/* View Mode Content */}
+                    <div className="not-prose mb-8 p-4 bg-muted/30 border rounded-lg">
+                      <div className="flex flex-wrap gap-6">
+                        {caseStudy.clientName && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <div className="w-8 h-8 rounded-md bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center shrink-0">
+                              <Building2 className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                                Client
+                              </p>
+                              <p className="font-semibold text-foreground">
+                                {caseStudy.clientName}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        {caseStudy.clientIndustry && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <div className="w-8 h-8 rounded-md bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                              <Globe className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                                Industry
+                              </p>
+                              <p className="font-semibold text-foreground">
+                                {caseStudy.clientIndustry}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="w-8 h-8 rounded-md bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 flex items-center justify-center shrink-0">
+                            <Calendar className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                              Created
+                            </p>
+                            <p className="font-semibold text-foreground">
+                              {new Date().toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  </>
-                )}
 
-                {caseStudy.keyQuotes && caseStudy.keyQuotes.length > 0 && (
-                  <>
-                    <h2>Customer Quotes</h2>
-                    {caseStudy.keyQuotes.map((quote: string, idx: number) => (
-                      <blockquote key={idx}>"{quote}"</blockquote>
-                    ))}
-                  </>
+                    <div className="text-lg leading-relaxed text-muted-foreground mb-8">
+                      {caseStudy.summary}
+                    </div>
+
+                    <h3>The Challenge</h3>
+                    <div className="whitespace-pre-wrap mb-6">
+                      {caseStudy.challenge}
+                    </div>
+
+                    <h3>The Solution</h3>
+                    <div className="whitespace-pre-wrap mb-6">
+                      {caseStudy.solution}
+                    </div>
+
+                    <h3>The Results</h3>
+                    <div className="whitespace-pre-wrap mb-6">
+                      {caseStudy.results}
+                    </div>
+
+                    {caseStudy.metrics && caseStudy.metrics.length > 0 && (
+                      <div className="not-prose my-8 grid gap-4 sm:grid-cols-2">
+                        {caseStudy.metrics.map((metric: any, i: number) => (
+                          <div
+                            key={i}
+                            className="bg-card border rounded-lg p-4 flex items-start gap-3 shadow-sm"
+                          >
+                            <div className="mt-1 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                              <TrendingUp className="w-3.5 h-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-xl font-bold text-foreground">
+                                {metric.metric}
+                              </p>
+                              <p className="text-sm text-muted-foreground leading-tight mt-1">
+                                {metric.quote}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {caseStudy.keyQuotes && caseStudy.keyQuotes.length > 0 && (
+                      <div className="not-prose my-8 space-y-4">
+                        {caseStudy.keyQuotes.map((quote: string, i: number) => (
+                          <div
+                            key={i}
+                            className="relative pl-6 border-l-4 border-primary/20 italic text-muted-foreground"
+                          >
+                            <Quote className="absolute -left-3 -top-3 w-6 h-6 text-muted-foreground/20 fill-current" />
+                            "{quote}"
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <div className="rounded-xl border bg-card p-5">
-            <h3 className="font-semibold mb-4">Quick Actions</h3>
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => handleCopy(generateMarkdown())}
-              >
-                <Copy className="w-4 h-4 mr-2" />
-                Copy Content
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() =>
-                  router.push(`/dashboard/projects/${project.id}/transcript`)
-                }
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                View Transcript
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => router.push(`/dashboard/projects/${project.id}`)}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Project
-              </Button>
             </div>
           </div>
 
-          {/* Publishing Info */}
-          <div className="rounded-xl border bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 p-5">
-            <h3 className="font-semibold mb-3">Ready to Publish?</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              When you're done editing, continue to the publishing page to make
-              your case study live and generate social posts.
-            </p>
-            <Button className="w-full" onClick={handlePublish}>
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Continue to Publish
-            </Button>
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Quick Actions Widget */}
+            <div className="bg-card border rounded-xl p-5 shadow-sm">
+              <h3 className="font-medium text-sm text-foreground mb-4">
+                Quick Actions
+              </h3>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => handleCopy(generateMarkdown())}
+                  className="w-full text-left group bg-muted/30 border border-transparent hover:border-border rounded-lg p-3 transition-all hover:shadow-sm"
+                >
+                  <div className="flex gap-3">
+                    <div className="p-1.5 bg-background rounded-md shadow-sm border shrink-0 h-fit group-hover:text-primary transition-colors">
+                      <Copy className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        Copy Content
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Copy Markdown to clipboard
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() =>
+                    router.push(`/dashboard/projects/${project.id}/transcript`)
+                  }
+                  className="w-full text-left group bg-muted/30 border border-transparent hover:border-border rounded-lg p-3 transition-all hover:shadow-sm"
+                >
+                  <div className="flex gap-3">
+                    <div className="p-1.5 bg-background rounded-md shadow-sm border shrink-0 h-fit group-hover:text-primary transition-colors">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        View Transcript
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        See original interview text
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Publishing Widget */}
+            <div className="bg-card border rounded-xl p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <h3 className="font-medium text-sm text-foreground">
+                  Ready to Publish?
+                </h3>
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-4">
+                When you're happy with the draft, continue to the publishing
+                flow to generate social assets.
+              </p>
+
+              <Button
+                onClick={() =>
+                  router.push(`/dashboard/case-studies/${caseStudy.id}`)
+                }
+                className="w-full"
+                variant="default"
+              >
+                Continue to Publish
+              </Button>
+            </div>
           </div>
         </div>
       </div>

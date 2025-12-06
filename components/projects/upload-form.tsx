@@ -13,10 +13,13 @@ import {
   HardDrive,
   Clock,
   Zap,
+  Info,
+  Bell,
 } from "lucide-react";
 import { Plan } from "@/lib/constants/plans";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface UploadFormProps {
   organizationId: string;
@@ -38,8 +41,7 @@ export function UploadForm({
   const usagePercentage =
     (limits.caseStudiesUsed / currentPlan.limits.caseStudies) * 100;
 
-  // --- Logic Preserved Exactly As Provided ---
-
+  // All your existing validation functions remain the same...
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -49,65 +51,6 @@ export function UploadForm({
     e.preventDefault();
     setIsDragging(false);
   }, []);
-
-  const validateFile = async (selectedFile: File) => {
-    const sizeMB = Number((selectedFile.size / (1024 * 1024)).toFixed(2));
-
-    let duration = 0;
-    try {
-      duration = selectedFile.type.startsWith("video/")
-        ? await getVideoDuration(selectedFile)
-        : await getAudioDuration(selectedFile);
-    } catch (err) {
-      toast.error("Failed to read file metadata. Please try another file.");
-      return false;
-    }
-
-    setValidation({ duration, sizeMB });
-
-    if (limits.caseStudiesUsed >= currentPlan.limits.caseStudies) {
-      toast.error(
-        `You've reached your monthly limit of ${currentPlan.limits.caseStudies} case studies.`,
-        {
-          action: {
-            label: "Upgrade",
-            onClick: () => router.push("/settings/billing"),
-          },
-        }
-      );
-      return false;
-    }
-
-    if (duration > currentPlan.limits.videoLength) {
-      toast.error(
-        `Video length (${duration} min) exceeds your plan limit of ${currentPlan.limits.videoLength} minutes.`,
-        {
-          action: {
-            label: "Upgrade",
-            onClick: () => router.push("/settings/billing"),
-          },
-        }
-      );
-      return false;
-    }
-
-    const newStorageUsed = limits.storageUsedMb + sizeMB;
-    if (newStorageUsed > currentPlan.limits.storage) {
-      toast.error(
-        `This upload would exceed your storage limit of ${currentPlan.limits.storage} MB.`,
-        {
-          description: `Current usage: ${limits.storageUsedMb} MB`,
-          action: {
-            label: "Upgrade",
-            onClick: () => router.push("/settings/billing"),
-          },
-        }
-      );
-      return false;
-    }
-
-    return true;
-  };
 
   const getVideoDuration = (file: File): Promise<number> => {
     return new Promise((resolve, reject) => {
@@ -135,6 +78,65 @@ export function UploadForm({
       audio.onerror = () => reject(new Error("Failed to load audio"));
       audio.src = URL.createObjectURL(file);
     });
+  };
+
+  const validateFile = async (selectedFile: File) => {
+    const sizeMB = Number((selectedFile.size / (1024 * 1024)).toFixed(2));
+
+    let duration = 0;
+    try {
+      duration = selectedFile.type.startsWith("video/")
+        ? await getVideoDuration(selectedFile)
+        : await getAudioDuration(selectedFile);
+    } catch (err) {
+      toast.error("Failed to read file metadata. Please try another file.");
+      return false;
+    }
+
+    setValidation({ duration, sizeMB });
+
+    if (limits.caseStudiesUsed >= currentPlan.limits.caseStudies) {
+      toast.error(
+        `You've reached your monthly limit of ${currentPlan.limits.caseStudies} case studies.`,
+        {
+          action: {
+            label: "Upgrade",
+            onClick: () => router.push("/dashboard/settings/billing"),
+          },
+        }
+      );
+      return false;
+    }
+
+    if (duration > currentPlan.limits.videoLength) {
+      toast.error(
+        `Video length (${duration} min) exceeds your plan limit of ${currentPlan.limits.videoLength} minutes.`,
+        {
+          action: {
+            label: "Upgrade",
+            onClick: () => router.push("/dashboard/settings/billing"),
+          },
+        }
+      );
+      return false;
+    }
+
+    const newStorageUsed = limits.storageUsedMb + sizeMB;
+    if (newStorageUsed > currentPlan.limits.storage) {
+      toast.error(
+        `This upload would exceed your storage limit of ${currentPlan.limits.storage} MB.`,
+        {
+          description: `Current usage: ${limits.storageUsedMb} MB`,
+          action: {
+            label: "Upgrade",
+            onClick: () => router.push("/dashboard/settings/billing"),
+          },
+        }
+      );
+      return false;
+    }
+
+    return true;
   };
 
   const handleDrop = useCallback(
@@ -206,11 +208,15 @@ export function UploadForm({
         throw new Error(data.error || "Upload failed");
       }
 
-      toast.success("Upload successful!", {
+      // ✅ KEY CHANGE: Show success message explaining background processing
+      toast.success("Upload successful! Processing in background...", {
         id: uploadToast,
-        description: "Processing your file...",
+        description:
+          "You'll receive an email when your case study is ready. Feel free to navigate away.",
+        duration: 5000,
       });
 
+      // ✅ Redirect immediately - processing continues in background
       router.push(`/dashboard/projects/${data.projectId}`);
     } catch (err: any) {
       toast.error(err.message || "Something went wrong", {
@@ -219,8 +225,6 @@ export function UploadForm({
       setUploading(false);
     }
   };
-
-  // --- Render ---
 
   return (
     <div className="min-h-screen bg-background p-6 lg:p-10">
@@ -246,10 +250,20 @@ export function UploadForm({
           </div>
         </div>
 
+        {/* ✅ NEW: Info Alert */}
+        <Alert>
+          <Bell className="h-4 w-4" />
+          <AlertDescription className="text-sm">
+            <strong>Processing happens in the background.</strong> After
+            uploading, you can navigate away and continue using the app. We'll
+            email you when your case study is ready (usually 2-5 minutes).
+          </AlertDescription>
+        </Alert>
+
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Upload Column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Upload Zone */}
+            {/* Upload Zone - Your existing code */}
             <div
               className={cn(
                 "relative group border rounded-xl bg-card transition-all duration-200 overflow-hidden",
@@ -267,7 +281,7 @@ export function UploadForm({
                 onChange={handleFileInput}
                 accept="video/mp4,video/quicktime,video/x-msvideo,audio/mpeg,audio/wav,audio/mp3"
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                disabled={uploading || !!file} // Disable input if file is selected (use remove button instead)
+                disabled={uploading || !!file}
               />
 
               {!file ? (
@@ -311,7 +325,7 @@ export function UploadForm({
                         </p>
                         <button
                           onClick={(e) => {
-                            e.preventDefault(); // Prevent input click
+                            e.preventDefault();
                             setFile(null);
                           }}
                           disabled={uploading}
@@ -337,13 +351,10 @@ export function UploadForm({
                         <div className="mt-4 space-y-2">
                           <div className="flex items-center gap-2 text-sm text-primary font-medium">
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            Uploading & Processing...
+                            Uploading...
                           </div>
                           <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary animate-progress origin-left"
-                              style={{ width: "100%" }}
-                            ></div>
+                            <div className="h-full bg-primary animate-pulse w-full" />
                           </div>
                         </div>
                       ) : (
@@ -377,12 +388,12 @@ export function UploadForm({
                     : "bg-primary hover:bg-primary/90"
                 )}
               >
-                {uploading ? "Processing..." : "Create Case Study"}
+                {uploading ? "Uploading..." : "Create Case Study"}
               </button>
             </div>
           </div>
 
-          {/* Sidebar - Plan Limits & Info */}
+          {/* Sidebar - Rest of your existing code */}
           <div className="space-y-6">
             {/* Plan Usage Widget */}
             <div className="bg-card border rounded-xl p-5 shadow-sm">
@@ -396,7 +407,7 @@ export function UploadForm({
                   </p>
                 </div>
                 <button
-                  onClick={() => router.push("/settings/billing")}
+                  onClick={() => router.push("/dashboard/settings/billing")}
                   className="text-xs font-medium text-primary hover:underline"
                 >
                   Upgrade
@@ -404,7 +415,6 @@ export function UploadForm({
               </div>
 
               <div className="space-y-4">
-                {/* Case Study Progress */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">Case Studies</span>
@@ -435,7 +445,6 @@ export function UploadForm({
                   </div>
                 </div>
 
-                {/* Storage & Video Limits */}
                 <div className="grid grid-cols-2 gap-3 pt-3 border-t">
                   <div className="space-y-1">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
@@ -462,8 +471,23 @@ export function UploadForm({
             {/* Quick Tips */}
             <div className="space-y-3">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">
-                Why use AI Case Studies?
+                How it works
               </h4>
+              <div className="bg-muted/30 border border-transparent hover:border-border rounded-lg p-3 transition-colors">
+                <div className="flex gap-3">
+                  <div className="p-1.5 bg-background rounded-md shadow-sm border shrink-0 h-fit">
+                    <Upload className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      1. Upload
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      File is securely stored and queued for processing
+                    </p>
+                  </div>
+                </div>
+              </div>
               <div className="bg-muted/30 border border-transparent hover:border-border rounded-lg p-3 transition-colors">
                 <div className="flex gap-3">
                   <div className="p-1.5 bg-background rounded-md shadow-sm border shrink-0 h-fit">
@@ -471,10 +495,10 @@ export function UploadForm({
                   </div>
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      Instant Analysis
+                      2. Process
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Turn raw interviews into structured insights in minutes.
+                      AI transcribes and analyzes in the background
                     </p>
                   </div>
                 </div>
@@ -486,10 +510,10 @@ export function UploadForm({
                   </div>
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      Sales Ready
+                      3. Notify
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Get professional assets ready to share with prospects.
+                      Get an email when your case study is ready
                     </p>
                   </div>
                 </div>

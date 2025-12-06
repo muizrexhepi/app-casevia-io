@@ -23,6 +23,7 @@ import {
   Download,
   Lock,
   Sparkles,
+  Palette,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,9 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SocialPostCard } from "@/components/case-studies/social-post-card";
 import { ExportButtons } from "@/components/case-studies/export-buttons";
+import { TemplateSelector } from "@/components/case-studies/template-selector";
 import { PLANS } from "@/lib/constants/plans";
+import { getTemplatesForPlan, TEMPLATES } from "@/lib/templates";
 
 export default async function CaseStudyDetailPage({
   params,
@@ -81,6 +84,11 @@ export default async function CaseStudyDetailPage({
   const socialPostLimit = plan?.limits.socialPosts || 0;
   const hasSocialPostAccess = socialPostLimit > 0 || socialPostLimit === -1;
 
+  // Get available templates for user's plan
+  const availableTemplates = getTemplatesForPlan(limits?.planId || "free");
+  const currentTemplate =
+    TEMPLATES.find((t) => t.id === data.templateUsed) || TEMPLATES[0];
+
   const keyQuotes = safeParseJsonb(data.keyQuotes);
   const metrics = safeParseJsonb(data.metrics);
   const keyTakeaways = safeParseJsonb(data.keyTakeaways);
@@ -111,6 +119,10 @@ export default async function CaseStudyDetailPage({
               ) : (
                 <Badge variant="outline">Draft</Badge>
               )}
+              <Badge variant="outline">
+                <Palette className="w-3 h-3 mr-1" />
+                {currentTemplate.name}
+              </Badge>
             </div>
             <h1 className="text-3xl font-bold text-foreground mb-2">
               {data.title}
@@ -145,6 +157,10 @@ export default async function CaseStudyDetailPage({
           <TabsTrigger value="content">
             <BookText className="w-4 h-4 mr-2" />
             Content
+          </TabsTrigger>
+          <TabsTrigger value="design">
+            <Palette className="w-4 h-4 mr-2" />
+            Design
           </TabsTrigger>
           <TabsTrigger value="social">
             <Share2 className="w-4 h-4 mr-2" />
@@ -360,6 +376,46 @@ export default async function CaseStudyDetailPage({
               )}
             </aside>
           </div>
+        </TabsContent>
+
+        {/* Design Tab */}
+        <TabsContent value="design">
+          <Card>
+            <CardHeader>
+              <CardTitle>Template Selection</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Choose a template to customize the look of your case study
+              </p>
+            </CardHeader>
+            <CardContent>
+              <TemplateSelector
+                caseStudyId={data.id}
+                currentTemplate={data.templateUsed || "modern"}
+                availableTemplates={availableTemplates}
+                userPlanId={limits?.planId || "free"}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Custom Branding (Pro/Agency) */}
+          {(limits?.planId === "pro" || limits?.planId === "agency") && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Custom Branding</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Customize colors and add your logo
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="p-6 text-center border-2 border-dashed rounded-lg">
+                  <Sparkles className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground">
+                    Custom branding options coming soon
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Social & Marketing Tab */}

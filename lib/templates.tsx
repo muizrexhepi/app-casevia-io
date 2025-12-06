@@ -1,11 +1,11 @@
-// lib/templates.tsx
+// lib/templates.tsx - COMPLETE VERSION WITH ALL TEMPLATES
 import React from "react";
 
 export interface Template {
   id: string;
   name: string;
   description: string;
-  preview: string; // URL or image
+  preview: string;
   tier: "free" | "pro" | "agency";
   features: string[];
   colors: {
@@ -137,7 +137,6 @@ export function getTemplatesForPlan(planId: string): Template[] {
   return TEMPLATES.filter((t) => allowedTiers.includes(t.tier));
 }
 
-// Template rendering components
 export interface TemplateProps {
   caseStudy: {
     title: string;
@@ -159,7 +158,7 @@ export interface TemplateProps {
   template: Template;
 }
 
-// Modern Template
+// ========== MODERN TEMPLATE ==========
 export function ModernTemplate({ caseStudy, template }: TemplateProps) {
   const colors = caseStudy.customBranding?.primaryColor
     ? {
@@ -187,7 +186,7 @@ export function ModernTemplate({ caseStudy, template }: TemplateProps) {
         >
           {caseStudy.title}
         </h1>
-        <p className="text-xl text-gray-600 leading-relaxed">
+        <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
           {caseStudy.summary}
         </p>
       </div>
@@ -195,19 +194,23 @@ export function ModernTemplate({ caseStudy, template }: TemplateProps) {
       {/* Client Info */}
       {(caseStudy.clientName || caseStudy.clientIndustry) && (
         <div
-          className="rounded-2xl p-6 mb-16 border-l-4"
-          style={{ borderColor: colors.primary, backgroundColor: "#f9fafb" }}
+          className="rounded-2xl p-6 mb-16 border-l-4 bg-gray-50 dark:bg-gray-900"
+          style={{ borderColor: colors.primary }}
         >
           <div className="grid md:grid-cols-2 gap-4">
             {caseStudy.clientName && (
               <div>
-                <p className="text-sm text-gray-500 mb-1">Client</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                  Client
+                </p>
                 <p className="text-lg font-semibold">{caseStudy.clientName}</p>
               </div>
             )}
             {caseStudy.clientIndustry && (
               <div>
-                <p className="text-sm text-gray-500 mb-1">Industry</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                  Industry
+                </p>
                 <p className="text-lg font-semibold">
                   {caseStudy.clientIndustry}
                 </p>
@@ -238,7 +241,9 @@ export function ModernTemplate({ caseStudy, template }: TemplateProps) {
                 }}
               >
                 <p className="text-3xl font-bold mb-3">{metric.metric}</p>
-                <p className="text-sm opacity-90 italic">"{metric.quote}"</p>
+                {metric.quote && (
+                  <p className="text-sm opacity-90 italic">"{metric.quote}"</p>
+                )}
               </div>
             ))}
           </div>
@@ -253,7 +258,7 @@ export function ModernTemplate({ caseStudy, template }: TemplateProps) {
             {caseStudy.keyQuotes.map((quote, idx) => (
               <blockquote
                 key={idx}
-                className="border-l-4 pl-6 py-2 italic text-lg text-gray-700"
+                className="border-l-4 pl-6 py-2 italic text-lg text-gray-700 dark:text-gray-300"
                 style={{ borderColor: colors.primary }}
               >
                 "{quote}"
@@ -262,11 +267,31 @@ export function ModernTemplate({ caseStudy, template }: TemplateProps) {
           </div>
         </div>
       )}
+
+      {/* Key Takeaways */}
+      {caseStudy.keyTakeaways && caseStudy.keyTakeaways.length > 0 && (
+        <div className="mt-16">
+          <h2 className="text-3xl font-bold mb-8">Key Takeaways</h2>
+          <ul className="space-y-4">
+            {caseStudy.keyTakeaways.map((takeaway, idx) => (
+              <li key={idx} className="flex items-start gap-3">
+                <div
+                  className="flex-shrink-0 w-2 h-2 rounded-full mt-2"
+                  style={{ backgroundColor: colors.primary }}
+                />
+                <span className="text-lg text-gray-700 dark:text-gray-300">
+                  {takeaway}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
 
-// Professional Template
+// ========== PROFESSIONAL TEMPLATE ==========
 export function ProfessionalTemplate({ caseStudy, template }: TemplateProps) {
   const colors = caseStudy.customBranding?.primaryColor
     ? {
@@ -276,7 +301,7 @@ export function ProfessionalTemplate({ caseStudy, template }: TemplateProps) {
     : template.colors;
 
   return (
-    <div className="max-w-5xl mx-auto px-8 py-16 bg-white">
+    <div className="max-w-5xl mx-auto px-8 py-16 bg-white dark:bg-gray-950">
       {/* Header with Logo */}
       <div
         className="border-b-2 pb-8 mb-12"
@@ -295,28 +320,34 @@ export function ProfessionalTemplate({ caseStudy, template }: TemplateProps) {
         >
           {caseStudy.title}
         </h1>
-        <p className="text-lg text-gray-600">{caseStudy.summary}</p>
+        <p className="text-lg text-gray-600 dark:text-gray-300">
+          {caseStudy.summary}
+        </p>
       </div>
 
       {/* Executive Summary Box */}
       {(caseStudy.clientName || caseStudy.clientIndustry) && (
-        <div className="bg-gray-50 border-2 rounded-lg p-6 mb-12">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">
+        <div className="bg-gray-50 dark:bg-gray-900 border-2 rounded-lg p-6 mb-12">
+          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-4">
             Executive Summary
           </h3>
           <div className="grid md:grid-cols-2 gap-6">
             {caseStudy.clientName && (
               <div>
-                <p className="text-xs text-gray-500 mb-1">Organization</p>
-                <p className="font-semibold text-gray-900">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  Organization
+                </p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">
                   {caseStudy.clientName}
                 </p>
               </div>
             )}
             {caseStudy.clientIndustry && (
               <div>
-                <p className="text-xs text-gray-500 mb-1">Sector</p>
-                <p className="font-semibold text-gray-900">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  Sector
+                </p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">
                   {caseStudy.clientIndustry}
                 </p>
               </div>
@@ -331,16 +362,19 @@ export function ProfessionalTemplate({ caseStudy, template }: TemplateProps) {
           number="01"
           title="The Challenge"
           content={caseStudy.challenge}
+          color={colors.primary}
         />
         <NumberedSection
           number="02"
           title="The Solution"
           content={caseStudy.solution}
+          color={colors.primary}
         />
         <NumberedSection
           number="03"
           title="The Results"
           content={caseStudy.results}
+          color={colors.primary}
         />
       </div>
 
@@ -358,29 +392,90 @@ export function ProfessionalTemplate({ caseStudy, template }: TemplateProps) {
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
             {caseStudy.metrics.map((metric, idx) => (
-              <div key={idx} className="text-center p-6 border-2 rounded-lg">
+              <div
+                key={idx}
+                className="text-center p-6 border-2 rounded-lg bg-white dark:bg-gray-900"
+              >
                 <p
                   className="text-3xl font-bold mb-2"
                   style={{ color: colors.primary }}
                 >
                   {metric.metric}
                 </p>
-                <p className="text-sm text-gray-600">"{metric.quote}"</p>
+                {metric.quote && (
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    "{metric.quote}"
+                  </p>
+                )}
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Quotes */}
+      {caseStudy.keyQuotes && caseStudy.keyQuotes.length > 0 && (
+        <div className="mt-12">
+          <h2
+            className="text-2xl font-bold mb-6"
+            style={{ color: colors.primary }}
+          >
+            Client Testimonials
+          </h2>
+          <div className="space-y-4">
+            {caseStudy.keyQuotes.map((quote, idx) => (
+              <div
+                key={idx}
+                className="p-6 border-l-4 bg-gray-50 dark:bg-gray-900"
+                style={{ borderColor: colors.primary }}
+              >
+                <p className="italic text-gray-700 dark:text-gray-300">
+                  "{quote}"
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Key Takeaways */}
+      {caseStudy.keyTakeaways && caseStudy.keyTakeaways.length > 0 && (
+        <div className="mt-12">
+          <h2
+            className="text-2xl font-bold mb-6"
+            style={{ color: colors.primary }}
+          >
+            Strategic Insights
+          </h2>
+          <ul className="space-y-3">
+            {caseStudy.keyTakeaways.map((takeaway, idx) => (
+              <li
+                key={idx}
+                className="flex items-start gap-3 text-gray-700 dark:text-gray-300"
+              >
+                <div
+                  className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold mt-0.5"
+                  style={{ backgroundColor: colors.primary }}
+                >
+                  {idx + 1}
+                </div>
+                <span>{takeaway}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
   );
 }
 
-// Helper Components
+// ========== HELPER COMPONENTS ==========
+
 function Section({ title, content }: { title: string; content: string }) {
   return (
     <div>
       <h2 className="text-3xl font-bold mb-4">{title}</h2>
-      <p className="text-lg text-gray-700 leading-relaxed whitespace-pre-wrap">
+      <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
         {content}
       </p>
     </div>
@@ -391,21 +486,26 @@ function NumberedSection({
   number,
   title,
   content,
+  color,
 }: {
   number: string;
   title: string;
   content: string;
+  color: string;
 }) {
   return (
     <div className="flex gap-6">
       <div className="flex-shrink-0">
-        <div className="w-16 h-16 rounded-full bg-gray-900 text-white flex items-center justify-center text-xl font-bold">
+        <div
+          className="w-16 h-16 rounded-full text-white flex items-center justify-center text-xl font-bold"
+          style={{ backgroundColor: color }}
+        >
           {number}
         </div>
       </div>
       <div className="flex-1">
         <h2 className="text-2xl font-bold mb-4">{title}</h2>
-        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
           {content}
         </p>
       </div>
@@ -413,14 +513,13 @@ function NumberedSection({
   );
 }
 
-// Template Renderer - dynamically select component
+// ========== TEMPLATE RENDERER ==========
 export function renderTemplate(templateId: string, props: TemplateProps) {
-  const templates: Record<string, React.FC<TemplateProps>> = {
-    modern: ModernTemplate,
-    professional: ProfessionalTemplate,
-    // Add more as you build them
-  };
-
-  const TemplateComponent = templates[templateId] || ModernTemplate;
-  return <TemplateComponent {...props} />;
+  switch (templateId) {
+    case "professional":
+      return <ProfessionalTemplate {...props} />;
+    case "modern":
+    default:
+      return <ModernTemplate {...props} />;
+  }
 }
